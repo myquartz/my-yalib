@@ -1,9 +1,8 @@
 @startebnf
 title Strict Markdown definition by EBNF (ISO/IEC 14977) - render using PlantUML
- 
- 
+  
 markdown      = block, {{newLine}-, block};
-block         = heading | quote | code | paragraph | list | link, newLine | image, newLine | horizontal, newLine | unparsable, newLine;
+block         = heading | quote | code | paragraph | list | horizontal, newLine | unparsable, newLine;
  
 (* Heading *)
 heading       = {heading1 | heading2 | heading3 | heading4 | heading5 | heading6}-, newLine ;
@@ -23,8 +22,6 @@ codeByMarker  = codeMarker, [space, {text}-], newLine, {unparsable}, newLine, co
 codeMarker    = ("~", "~", "~" | "`", "`", "`");
 
 codeByIndent  = indentSpaces, {unparsable}-, newLine, {codeByIndent};
-
-paragraph     = paragraphText, {newLine, paragraphText} ;
  
 list          = unorderedList | orderedList ;
 unorderedList = asteriskTypeItem, {asteriskTypeItem} | hyphenTypeItem, {hyphenTypeItem};
@@ -40,8 +37,6 @@ abcUpcaseTypeItem = upperCase,("." | ")"), listItem;
 
 listItem = {space | tab}-, paragraphText, {newLine, indentSpaces, (paragraphText | list | code | quoteLine)};
 
-(* control blocks *) 
-
 indentSpaces   = indentSpace1 | indentSpace2 | indentSpace3;
 indentSpace1   = space, space, space, [space] | tab;
 indentSpace2   = indentSpace1, (space, space, space, [space] | tab);
@@ -49,20 +44,21 @@ indentSpace3   = indentSpace2, (space, space, space, [space] | tab);
 
 horizontal    = ("-", "-", {"-"} | "=", "=", {"="});
 
-(* inline text *) 
-paragraphText = { {space | tab}, (text | bold | italic | inlineCode | underline | link), [space | tab] }-;
+(* paragraph and inline text *) 
 
-bold          = "*", "*", {{space | tab}, (text | italic | link | inlineCode | underline), [space | tab]}-, "*", "*";
-italic        = "*", {{space | tab}, (text | link | inlineCode | underline), [space | tab]}-, "*";
-underline     =  "_", "_", {{space | tab}, (text | inlineCode), [space | tab]}-, "_", "_" ;
-inlineCode    = "`", {{space | tab}, text, [space | tab]}-, "`" ;
+paragraph     = paragraphText, {newLine, paragraphText} ;
+
+paragraphText = { (text | bold | italic | inlineCode | underline | link), {space | tab} }-;
+
+bold          = "*", "*", {(text | italic | link | inlineCode | underline), {(space | tab), (text | italic | link | inlineCode | underline)}}-, "*", "*";
+italic        = "*", {(text | link | inlineCode | underline), { (space | tab), (text | link | inlineCode | underline)}}-, "*";
+underline     =  "_", "_", {(text | inlineCode), {(space | tab),(text | inlineCode)}}-, "_", "_" ;
+inlineCode    = "`", {text | space | tab | "*" }-, "`" ;
 
 link          = "[", { text |  space | tab }, "]", "(", url, ")" ;
 image          = "!", ["[", { text |  space | tab }, "]"], "(", url, ")" ;
 
-
-
-unparsable    = {(text | specialCharacter | controlCharacter), [space | tab]}-;
+unparsable    = {(text | specialCharacter | controlCharacter), {space | tab}}-;
 
 (* characters *) 
 text          = letter | digit | other;
@@ -77,6 +73,6 @@ controlCharacter = "\0" | "\\";
 space         = "\s";
 tab           = "\t";
 
-url           = letter, {letter | digit | "." | "?" | "!" | ":" | "-" | "_" | "/" | "+" | space} ;
+url           = letter, {letter | digit | "." | "?" | "!" | ":" | "-" | "_" | "/" | "+" } ;
 
 @endebnf
