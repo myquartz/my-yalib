@@ -2,7 +2,7 @@
 title Strict Markdown definition by EBNF (ISO/IEC 14977) - render using PlantUML
   
 markdown      = block, {{newLine}-, block};
-block         = heading | quote | code | paragraph | list | horizontal, newLine | unparsable, newLine;
+block         = heading | quote | code | paragraph | list | horizontal, newLine | unparseable, newLine;
  
 (* Heading *)
 heading       = {heading1 | heading2 | heading3 | heading4 | heading5 | heading6}-, newLine ;
@@ -15,13 +15,13 @@ heading6      = "######", space, text, [space, {"#"}] ;
  
 (* Normal blocks *)
 quote         = quoteLine, newLine, {quoteLine, newLine};
-quoteLine     = ">", space, {space}, paragraphText;
+quoteLine     = ">", [ { space | tab }-, [paragraphText]];
 
 code          = codeByMarker | codeByIndent;
-codeByMarker  = codeMarker, [space, {text}-], newLine, {unparsable}, newLine, codeMarker;
+codeByMarker  = codeMarker, [space, {text}-], newLine, {unparseable}, newLine, codeMarker;
 codeMarker    = ("~", "~", "~" | "`", "`", "`");
 
-codeByIndent  = indentSpaces, {unparsable}-, newLine, {codeByIndent};
+codeByIndent  = (indentSpaces | space, [space]), {unparseable}-, newLine, {codeByIndent};
  
 list          = unorderedList | orderedList ;
 unorderedList = asteriskTypeItem, {asteriskTypeItem} | hyphenTypeItem, {hyphenTypeItem};
@@ -42,7 +42,7 @@ indentSpace1   = space, space, space, [space] | tab;
 indentSpace2   = indentSpace1, (space, space, space, [space] | tab);
 indentSpace3   = indentSpace2, (space, space, space, [space] | tab);
 
-horizontal    = ("-", "-", {"-"} | "=", "=", {"="});
+horizontal    = ("-", "-", {"-"} | "_", "_", {"_"} | "=", "=", {"="});
 
 (* paragraph and inline text *) 
 
@@ -58,7 +58,7 @@ inlineCode    = "`", {text | space | tab | "*" }-, "`" ;
 link          = "[", { text |  space | tab }, "]", "(", url, ")" ;
 image          = "!", ["[", { text |  space | tab }, "]"], "(", url, ")" ;
 
-unparsable    = {(text | specialCharacter | controlCharacter), {space | tab}}-;
+unparseable    = {(text | specialCharacter | controlCharacter), {space | tab}}-;
 
 (* characters *) 
 text          = letter | digit | other;
