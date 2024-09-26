@@ -2,16 +2,16 @@
 title Strict Markdown definition by EBNF (ISO/IEC 14977) - render using PlantUML
   
 markdown      = block, {{newLine}-, block};
-block         = heading | quote | code | paragraph | list | horizontal, newLine | unparseable, newLine;
+block         = heading | quote | code | paragraph | list | horizontal | other;
  
 (* Heading *)
 heading       = {heading1 | heading2 | heading3 | heading4 | heading5 | heading6}-, newLine ;
-heading1      = "#", space, text, [space, {"#"}] | text, newLine, "=", {"="};
-heading2      = "##", space, text, [space, {"#"}] | text, newLine, "=", {"-"} ;
-heading3      = "###", space, text, [space, {"#"}] ;
-heading4      = "####", space, text, [space, {"#"}] ;
-heading5      = "#####", space, text, [space, {"#"}] ;
-heading6      = "######", space, text, [space, {"#"}] ;
+heading1      = "#", {( space | tab ), text}-, [ (space | tab), {"#"}] | { text, [ space | tab ] }-, newLine, "=", {"="};
+heading2      = "##", {( space | tab ), text}-, [ (space | tab), {"#"}] | { text, [ space | tab ] }-, newLine, "-", {"-"} ;
+heading3      = "###", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
+heading4      = "####", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
+heading5      = "#####", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
+heading6      = "######", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
  
 (* Normal blocks *)
 quote         = quoteLine, newLine, {quoteLine, newLine};
@@ -46,13 +46,15 @@ horizontal    = ("-", "-", {"-"} | "_", "_", {"_"} | "=", "=", {"="});
 
 (* paragraph and inline text *) 
 
-paragraph     = paragraphText, {newLine, paragraphText} ;
+other = { unparseable }, newLine ;
+
+paragraph     = paragraphText, {newLine, paragraphText}, newLine ;
 
 paragraphText = { (text | bold | italic | inlineCode | underline | link), {space | tab} }-;
 
-bold          = "*", "*", {(text | italic | link | inlineCode | underline), {(space | tab), (text | italic | link | inlineCode | underline)}}-, "*", "*";
-italic        = "*", {(text | link | inlineCode | underline), { (space | tab), (text | link | inlineCode | underline)}}-, "*";
-underline     =  "_", "_", {(text | inlineCode), {(space | tab),(text | inlineCode)}}-, "_", "_" ;
+bold          = "*", "*", {(text | italic | link | inlineCode | underline), {space | tab} }-, "*", "*";
+italic        = "*", {(text | link | inlineCode | underline), {space | tab} }-, "*";
+underline     =  "_", "_", {(text | inlineCode), {space | tab}}-, "_", "_" ;
 inlineCode    = "`", {text | space | tab | "*" }-, "`" ;
 
 link          = "[", { text |  space | tab }, "]", "(", url, ")" ;
