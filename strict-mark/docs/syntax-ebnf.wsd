@@ -1,5 +1,5 @@
 @startebnf
-title Strict Markdown definition by EBNF (ISO/IEC 14977) - render using PlantUML
+title Strict Markdown syntax definition by EBNF (ISO/IEC 14977) - render using PlantUML
   
 markdown      = block, {{newLine}-, block};
 block         = heading | quote | code | paragraph | list | horizontal | other;
@@ -14,26 +14,27 @@ heading5      = "#####", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
 heading6      = "######", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
  
 (* Normal blocks *)
-quote         = quoteLine, newLine, {quoteLine, newLine};
+quote         = {quoteLine, newLine}-;
 quoteLine     = ">", [ { space | tab }-, [paragraphText]];
 
 code          = codeByMarker | codeByIndent;
-codeByMarker  = codeMarker, [space, {text}-], newLine, {unparseable}, newLine, codeMarker;
+codeByMarker  = codeMarker, {space}, [text, {space}], newLine, {unparseable}, newLine, codeMarker, {space}, newLine;
 codeMarker    = ("~", "~", "~" | "`", "`", "`");
 
 codeByIndent  = (indentSpaces | space, [space]), {unparseable}-, newLine, {codeByIndent};
  
-list          = unorderedList | orderedList ;
-unorderedList = asteriskTypeItem, {asteriskTypeItem} | hyphenTypeItem, {hyphenTypeItem};
-orderedList = numberTypeItem, {numberTypeItem}  | iiiTypeItem, {iiiTypeItem} | abcTypeItem, {abcTypeItem} | abcUpcaseTypeItem, {abcUpcaseTypeItem};
+list          = unorderedList | orderedList;
+unorderedList = {asteriskTypeItem, newLine}- | {bulletTypeItem, newLine}-;
 
 asteriskTypeItem = "*", listItem;
-hyphenTypeItem = "-", listItem;
+bulletTypeItem = "-", listItem;
+
+orderedList = {numberTypeItem, newLine}-  | {iiiTypeItem, newLine}- | {abcTypeItem, newLine}- | {ABCTypeItem, newLine}-;
 
 numberTypeItem = digit, [digit], ("." | ")"), listItem;
 iiiTypeItem = ("i" | "v" | "x"), {("i" | "v" | "x")}, ("." | ")"), listItem;
 abcTypeItem = lowerCase,("." | ")"), listItem;
-abcUpcaseTypeItem = upperCase,("." | ")"), listItem;
+ABCTypeItem = upperCase,("." | ")"), listItem;
 
 listItem = {space | tab}-, paragraphText, {newLine, indentSpaces, (paragraphText | list | code | quoteLine)};
 
@@ -42,7 +43,7 @@ indentSpace1   = space, space, space, [space] | tab;
 indentSpace2   = indentSpace1, (space, space, space, [space] | tab);
 indentSpace3   = indentSpace2, (space, space, space, [space] | tab);
 
-horizontal    = ("-", "-", {"-"} | "_", "_", {"_"} | "=", "=", {"="});
+horizontal    = ("-", "-", {"-"} | "_", "_", {"_"} | "=", "=", {"="}), newLine;
 
 (* paragraph and inline text *) 
 
@@ -66,7 +67,9 @@ unparseable    = {(text | specialCharacter | controlCharacter), {space | tab}}-;
 text          = letter | digit | other;
 newLine       = ["\r"], "\n";
  
-letter        = "a" | "b" | "c" | "..." | "z" | "A" | "B" | "C" | "..." | "Z" ;
+lowerCase     = "a" | "b" | "c" | "..." | "z";
+upperCase     = "A" | "B" | "C" | "..." | "Z";
+letter        = lowerCase | upperCase;
 digit         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 other         = "'" | '"' | "," | "." | "?" | "!" | ":" | ";" | "#" | "&" | "<" | "/" | "=" | "_" | "@" | "-" | ">" | "+" | "~";
 specialCharacter = "*" | "`";
