@@ -1,0 +1,264 @@
+package vietfi.markdown.strict.render;
+
+import java.nio.CharBuffer;
+
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
+import vietfi.markdown.strict.SMDMarkers;
+import vietfi.markdown.strict.SMDParser;
+import vietfi.markdown.strict.SMDXhtmlWriter;
+
+public class XhtmlWriterImpl implements SMDXhtmlWriter {
+	
+	public static final String XHTML_BLOCKQUOTE_TAG = "blockquote";
+	public static final String XHTML_PARA_TAG = "p";
+	public static final String XHTML_PRE_TAG_NAME = "pre";
+	public static final String XHTML_PRE_LANGUAGUE_ATTRIBUTE = "class";
+	public static final String XHTML_PRE_LANGUAGUE_PREFIX = "language-";
+	
+	
+	public static final String XHTML_UL_TAG = "ul";
+	public static final String XHTML_OL_TAG = "ol";
+	public static final String XHTML_LI_TAG = "li";
+	
+	public static final String[] XHTML_HEADINGS_TAG = {"h1","h2","h3","h4","h5","h6",};
+	
+	private final static String XHTML_HR = "hr";
+	private final static String XHTML_HR_CLASS_ATTR = "class";
+	private final static String XHTML_UNDERSCORE_HR = "underscore-line";
+	private final static String XHTML_DOUBLE_HR = "double-line";
+
+	private char[] myArray = null;
+	StringBuilder sb = new StringBuilder(1024);
+	StringBuilder lastText = new StringBuilder(128);
+    StringBuilder lastUrl = new StringBuilder(128);
+    
+	@Override
+	public void writeXhtml(SMDMarkers markers, CharBuffer buffer, XMLStreamWriter xmlWriter) throws XMLStreamException {
+
+		if(markers.isEmpty() && buffer.position() > 0) {
+			//whole buffer is the line of paragraph
+			if(buffer.hasArray())
+				xmlWriter.writeCharacters(buffer.array(), 0, buffer.position());
+			else {
+				if(myArray == null || myArray.length < buffer.position())
+					myArray = new char[buffer.capacity()];
+				for(int j = 0; j < buffer.position(); j++)
+					myArray[j] = buffer.get(j);
+				xmlWriter.writeCharacters(myArray, 0, buffer.position());
+			}
+			return;
+		}
+		
+		//reset buffer.
+		sb.setLength(0);
+		lastText.setLength(0);
+		lastUrl.setLength(0);
+		
+        boolean isInLinkText = false;
+    	boolean isInUrl = false;
+    	
+        while(markers.cursorIsAvailable()) {
+        	int state = markers.cursorState(); //extract state
+        	//if(!isMyState(state) && state != STATE_UNPARSABLE)
+        		//break;
+        	
+        	isInLinkText = false;
+        	isInUrl = false;
+        	
+        	if(markers.cursorIsMarkerStart()) {
+        		if(sb.length() > 0) {
+        			xmlWriter.writeCharacters(sb.toString());
+        			sb.setLength(0);
+        		}
+        		//start marker
+        		switch(state) {
+	        		case SMDParser.STATE_STRIKETHROUGH:
+	        			xmlWriter.writeStartElement("s");
+	        			break;
+	        		case SMDParser.STATE_BOLD:
+	        			xmlWriter.writeStartElement("b");
+	        			break;
+	        		case SMDParser.STATE_ITALIC:
+	        			xmlWriter.writeStartElement("i");
+	        			break;
+	        		case SMDParser.STATE_UNDERLINE:
+	        			xmlWriter.writeStartElement("u");
+	        			break;
+	        		case SMDParser.STATE_INLINE_CODE:
+	        			xmlWriter.writeStartElement("code");
+	        			break;
+	        		case SMDParser.STATE_LINK:
+	        			xmlWriter.writeStartElement("a");
+	        			break;
+	        		case SMDParser.STATE_IMAGE:
+	        			xmlWriter.writeStartElement("img");
+	        			break;
+	        		case SMDParser.STATE_CODE_BLOCK:
+	        			xmlWriter.writeStartElement(XHTML_PRE_TAG_NAME);
+	        			break;
+	        		case SMDParser.STATE_QUOTE_BLOCK:
+	        			xmlWriter.writeStartElement(XHTML_BLOCKQUOTE_TAG);
+	        			break;
+	        		case SMDParser.STATE_QUOTE_PARAGRAPH:
+	        		case SMDParser.STATE_PARAGRAPH:
+	        			xmlWriter.writeStartElement(XHTML_PARA_TAG);
+	        			break;
+	        		case SMDParser.STATE_ORDERED_LIST:
+	        			xmlWriter.writeStartElement(XHTML_OL_TAG);
+	        			break;
+	        		case SMDParser.STATE_UNORDERED_LIST:
+	        			xmlWriter.writeStartElement(XHTML_UL_TAG);
+	        			break;
+	        		case SMDParser.STATE_LIST_ITEM:
+	        			xmlWriter.writeStartElement(XHTML_LI_TAG);
+	        			break;
+	        			
+	        		case SMDParser.STATE_HEADING_1:
+	        		case SMDParser.STATE_HEADING_2:
+	        		case SMDParser.STATE_HEADING_3:
+	        		case SMDParser.STATE_HEADING_4:
+	        		case SMDParser.STATE_HEADING_5:
+	        		case SMDParser.STATE_HEADING_6:
+	        			xmlWriter.writeStartElement(XHTML_HEADINGS_TAG[state - SMDParser.STATE_HEADING_1]);
+	        			break;
+	        			
+	        		case SMDParser.STATE_HORIZONTAL:
+	        		case SMDParser.STATE_HORIZONTAL_D:
+	        		case SMDParser.STATE_HORIZONTAL_U:
+	        			xmlWriter.writeEmptyElement(XHTML_HR);
+	        		
+	        			if(state == SMDParser.STATE_HORIZONTAL_D)
+	        				xmlWriter.writeAttribute(XHTML_HR_CLASS_ATTR, XHTML_DOUBLE_HR);
+	        			else if(state == SMDParser.STATE_HORIZONTAL_U)
+	        				xmlWriter.writeAttribute(XHTML_HR_CLASS_ATTR, XHTML_UNDERSCORE_HR);
+	        			break;
+        		}
+        	}
+        	//stop
+        	else if(markers.cursorIsMarkerStop()) { //MARKER_STOP
+        		//stop marker
+        		switch(state) {
+        		case SMDParser.STATE_STRIKETHROUGH:
+        		case SMDParser.STATE_BOLD:
+        		case SMDParser.STATE_ITALIC:
+        		case SMDParser.STATE_UNDERLINE:
+        		case SMDParser.STATE_INLINE_CODE:
+        		case SMDParser.STATE_IMAGE:
+        		case SMDParser.STATE_CODE_BLOCK:
+        		case SMDParser.STATE_QUOTE_BLOCK:
+        		case SMDParser.STATE_QUOTE_PARAGRAPH:
+        		case SMDParser.STATE_PARAGRAPH:
+        		case SMDParser.STATE_ORDERED_LIST:
+        		case SMDParser.STATE_UNORDERED_LIST:
+        		case SMDParser.STATE_LIST_ITEM:
+        		case SMDParser.STATE_HEADING_1:
+        		case SMDParser.STATE_HEADING_2:
+        		case SMDParser.STATE_HEADING_3:
+        		case SMDParser.STATE_HEADING_4:
+        		case SMDParser.STATE_HEADING_5:
+        		case SMDParser.STATE_HEADING_6:
+        			xmlWriter.writeEndElement();
+        			break;
+        		case SMDParser.STATE_LINK:
+        			if(lastText.length() > 0) {
+        				xmlWriter.writeCharacters(lastText.toString());
+        				lastText.setLength(0);
+        			}
+        			else {
+        				xmlWriter.writeCharacters(lastUrl.toString());
+        			}
+        			xmlWriter.writeEndElement();
+        			break;
+        			
+	    		}
+        	}
+        	
+        	if(markers.cursorIsContentStart()) {
+        		switch(state) {
+        		case SMDParser.STATE_URL: //state URL content is differ
+        		case SMDParser.STATE_IMAGE_SRC:
+        			isInUrl = true;
+        			/*if(lastUrl == null)
+        				lastUrl = new StringBuilder();
+        			else*/
+        				lastUrl.setLength(0);
+        			break;
+        		case SMDParser.STATE_IMAGE:
+        		case SMDParser.STATE_LINK:
+        			isInLinkText = true;
+        			/*if(lastText == null)
+        				lastText = new StringBuilder();
+        			else*/
+        				lastText.setLength(0);
+        			break;
+        		}
+        	}
+        	else if(markers.cursorIsContentStop()) { //End of content
+        		switch(state) {
+        		case SMDParser.STATE_NONE:
+        			break;
+        		case SMDParser.STATE_URL: //state URL content is differ
+        			xmlWriter.writeAttribute("href", lastUrl.toString());
+        			break;
+        		case SMDParser.STATE_IMAGE:
+        			xmlWriter.writeAttribute("alt", lastText.toString());
+        			break;
+        		case SMDParser.STATE_IMAGE_SRC:
+        			xmlWriter.writeAttribute("src", lastUrl.toString());
+        			break;
+        		case SMDParser.STATE_CODE_LANGUAGE:
+    				xmlWriter.writeAttribute(XHTML_PRE_LANGUAGUE_ATTRIBUTE, 
+    					XHTML_PRE_LANGUAGUE_PREFIX+sb.toString());
+    				sb.setLength(0);
+    				break;
+    			default:
+					if(sb.length() > 0) {
+        				xmlWriter.writeCharacters(sb.toString());
+        				sb.setLength(0);
+        			}
+        			break;
+        		}
+        	}
+        	
+        	int contentBegin = markers.cursorPosition1();
+			int contentEnd = Math.min(markers.cursorPosition2(), buffer.position());
+			
+			if (contentBegin >= 0 && contentBegin < contentEnd) {
+				if(buffer.hasArray()) {
+					if(isInLinkText) {
+						lastText.append(buffer.array(), contentBegin, contentEnd - contentBegin);
+					}
+					else if(isInUrl) {//copy to URL
+						lastUrl.append(buffer.array(), contentBegin, contentEnd - contentBegin);
+	    			}
+					else {
+						sb.append(buffer.array(), contentBegin, contentEnd - contentBegin);
+					}
+				}
+				else {
+					//copy char by char
+					if(isInLinkText) {
+						for(int j = contentBegin; j < contentEnd; j++)
+							lastText.append(buffer.get(j));
+					}
+					else if(isInUrl) {//copy to URL
+						for(int j = contentBegin; j < contentEnd; j++)
+							lastUrl.append(buffer.get(j));
+	    			}
+					else {
+						for(int j = contentBegin; j < contentEnd; j++)
+							sb.append(buffer.get(j));
+					}
+				}
+
+			}
+			
+        	markers.cursorGoNext();
+        }
+        if(sb.length() > 0)
+        	xmlWriter.writeCharacters(sb.toString());
+	}
+
+}
