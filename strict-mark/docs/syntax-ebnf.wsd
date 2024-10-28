@@ -6,8 +6,8 @@ block         = heading | quote | code | paragraph | list | horizontal | other;
  
 (* Heading *)
 heading       = {heading1 | heading2 | heading3 | heading4 | heading5 | heading6}-, newLine ;
-heading1      = "#", {( space | tab ), text}-, [ (space | tab), {"#"}] | { text, [ space | tab ] }-, newLine, "=", {"="};
-heading2      = "##", {( space | tab ), text}-, [ (space | tab), {"#"}] | { text, [ space | tab ] }-, newLine, "-", {"-"} ;
+heading1      = "#", {{ space | tab }-, text}-, [ {space | tab}-, {"#"}] | { text, [ space | tab ] }-, newLine, "=", {"="};
+heading2      = "##", {{ space | tab }-, text}-, [ {space | tab}-, {"#"}] | { text, [ space | tab ] }-, newLine, "-", {"-"} ;
 heading3      = "###", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
 heading4      = "####", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
 heading5      = "#####", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
@@ -15,44 +15,50 @@ heading6      = "######", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
  
 (* Normal blocks *)
 quote         = {quoteLine, newLine}-;
-quoteLine     = ">", [ { space | tab }-, [paragraphText]];
+quoteLine     = ">", [ { space | tab }-, [textLine | unparseable]];
 
 code          = codeByMarker | codeByIndent;
 codeByMarker  = codeMarker, {space}, [text, {space}], newLine, {unparseable}, newLine, codeMarker, {space}, newLine;
 codeMarker    = ("~", "~", "~" | "`", "`", "`");
 
-codeByIndent  = (indentSpaces | space, [space]), {unparseable}-, newLine, {codeByIndent};
- 
-list          = unorderedList | orderedList;
-unorderedList = {asteriskTypeItem, newLine}- | {bulletTypeItem, newLine}-;
+codeByIndent  = (tab | space), {unparseable}, newLine, {codeByIndent};
 
-asteriskTypeItem = "*", listItem;
-bulletTypeItem = "-", listItem;
+paragraph     = textLine, {[controlCharacter], newLine, textLine}, newLine ;
+
+ (* List blocks *)
+list          = unorderedList | orderedList;
+unorderedList = {asteriskTypeItem, newLine}- | {hyphenTypeItem, newLine}- | {plusTypeItem, newLine}-;
+
+asteriskTypeItem = "*", uListItem;
+hyphenTypeItem = "-", uListItem;
+plusTypeItem = "+", uListItem;
+
+uListItem = {space | tab}-, textLine, {newLine, [newLine], indent2Spaces, (textLine | codeByIndent | quoteLine | list )};
 
 orderedList = {numberTypeItem, newLine}-  | {iiiTypeItem, newLine}- | {abcTypeItem, newLine}- | {ABCTypeItem, newLine}-;
 
-numberTypeItem = digit, [digit], ("." | ")"), listItem;
-iiiTypeItem = ("i" | "v" | "x"), {("i" | "v" | "x")}, ("." | ")"), listItem;
-abcTypeItem = lowerCase,("." | ")"), listItem;
-ABCTypeItem = upperCase,("." | ")"), listItem;
+numberTypeItem = digit, [digit], ("." | ")"), oListItem;
+iiiTypeItem = ("i" | "v" | "x"), {("i" | "v" | "x")}, ("." | ")"), oListItem;
+abcTypeItem = lowerCase,("." | ")"), oListItem;
+ABCTypeItem = upperCase,("." | ")"), oListItem;
 
-listItem = {space | tab}-, paragraphText, {newLine, indentSpaces, (paragraphText | list | code | quoteLine)};
+oListItem = {space | tab}-, textLine, {newLine, [newLine], indent3Spaces, (textLine | codeByIndent | quoteLine | list )};
 
-indentSpaces   = indentSpace1 | indentSpace2 | indentSpace3;
-indentSpace1   = space, space, space, [space] | tab;
-indentSpace2   = indentSpace1, (space, space, space, [space] | tab);
-indentSpace3   = indentSpace2, (space, space, space, [space] | tab);
+(* Other blocks *)
+
+indent2Spaces   = space, space, [space] | tab;
+
+indent3Spaces   = space, space, space, [space] | tab;
 
 horizontal    = ("-", "-", {"-"} | "_", "_", {"_"} | "=", "=", {"="}), newLine;
 
-(* paragraph and inline text *) 
-
 other = { unparseable }, newLine ;
 
-paragraph     = paragraphText, {newLine, paragraphText}, newLine ;
+(* inline text *) 
 
-paragraphText = { (text | bold | italic | inlineCode | underline | link), {space | tab} }-;
+textLine = { (text | strikethrough | bold | italic | inlineCode | underline | link), {space | tab } }-;
 
+strikethrough = "~", "~", {(text | bold | italic | link | inlineCode | underline), {space | tab} }-, "~", "~";
 bold          = "*", "*", {(text | italic | link | inlineCode | underline), {space | tab} }-, "*", "*";
 italic        = "*", {(text | link | inlineCode | underline), {space | tab} }-, "*";
 underline     =  "_", "_", {(text | inlineCode), {space | tab}}-, "_", "_" ;
