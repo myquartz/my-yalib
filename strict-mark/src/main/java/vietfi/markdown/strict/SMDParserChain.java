@@ -17,6 +17,12 @@ import vietfi.markdown.strict.block.SMDQuoteBlockParser;
 import vietfi.markdown.strict.block.SMDUnorderedListBlockParser;
 import vietfi.markdown.strict.block.UnparseableBlockParser;
 
+/** 
+ * This class to create a chain of SMDParser to parse the markdown buffer into markers.
+ * 
+ *  The markers can be use for generate HTML or XHTML.
+ *  
+ */
 public class SMDParserChain implements SMDParser {
 
 	private final SMDMarkers markers;
@@ -28,6 +34,21 @@ public class SMDParserChain implements SMDParser {
 		this.parsers = parsers;
 	}
 	
+	/**
+	 * Create a chain of customized list of parser.
+	 * 
+	 * The Unparseable parser is always created at the last of chain.
+	 * 
+	 * @param parserClasses Class of parsers to use.
+	 * @return the SMDParser to use.
+	 * 
+	 * @throws NoSuchMethodException
+	 * @throws SecurityException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws IllegalArgumentException
+	 * @throws InvocationTargetException
+	 */
 	public static SMDParser createParserOf(Class<SMDParser>... parserClasses) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		SMDMarkers markers = new SMDMarkers(4096);
 		List<SMDParser> list = new ArrayList<>(parserClasses.length);
@@ -40,6 +61,11 @@ public class SMDParserChain implements SMDParser {
 		return new SMDParserChain(markers, list.toArray(new SMDParser[list.size()]));
 	}
 	
+	/**
+	 * Create a chain for parsing content block only (unordered list, ordered list, code by marker and by indentation, quote and paragraph).
+	 * 
+	 * @return a parser for content parsing.
+	 */
 	public static SMDParser createParserOfContents() {
 		SMDMarkers markers = new SMDMarkers(1024);
 		
@@ -58,15 +84,43 @@ public class SMDParserChain implements SMDParser {
 				new UnparseableBlockParser(markers));
 	}
 	
+	/**
+	 * Create of standard chain with the following parsers:
+	 * 
+	 * 1. Heading by dash/equals
+	 * 2. Heading by pounds
+	 * 3. Horizontal line
+	 * 4. Ordered list
+	 * 5. Unordered list.
+	 * 6. Quote block
+	 * 7. Code block (by marker and by indentation)
+	 * 8. Paragraph
+	 * 9. Unparseable (everything else).
+	 *
+	 * This chain has implemented all syntax of Strict Mark Syntax  
+	 * 
+	 * {@link https://github.com/myquartz/my-yalib/tree/main/strict-mark/docs)}
+	 * @return a parser for page parsing
+	 */
 	public static SMDParser createParserOfStandard() {
-		SMDMarkers markers = new SMDMarkers(4096);
+		return createParserOfStandard(4096);
+	}
+	
+	/**
+	 * Create of standard chain, same description as  createParserOfStandard.
+	 * 
+	 * @param markerSize the size of markers to parse.
+	 * @return same as createParserOfStandard
+	 * @see createParserOfStandard()
+	 */
+	public static SMDParser createParserOfStandard(int markerSize) {
+		SMDMarkers markers = new SMDMarkers(markerSize);
 		
 		return new SMDParserChain(markers,
 				new SMDHorizontalBlockParser(markers),
 				
 				new SMDHeading12BlockParser(markers),
 				new SMDHeadingByPoundsBlockParser(markers),
-				new SMDHeading12BlockParser(markers),
 				
 				new SMDOrderedListBlockParser(markers),
 				new SMDUnorderedListBlockParser(markers),
@@ -81,6 +135,21 @@ public class SMDParserChain implements SMDParser {
 				new UnparseableBlockParser(markers));
 	}
 	
+	/**
+	 * Parse the buffer until there is no remaining to read.
+	 * 
+	 * After calling, render the markers, then buffer should be fulfill afterward.
+	 * 
+	 * 1. If no more to read, add 2 new lines character then calling it again to mark its' end.
+	 * 2. If buffer compacted before next call, call the compact method with the buffer.position() to shift all markers position.
+	 * 
+	 * Return constants at SMDParser:
+	 * 
+	 * 1. SMD_VOID: no new line at end.
+	 * 2. SMD_BLOCK_CONTINUE: parsed successfully, wait for continue. 
+	 * 
+	 * @return code for continue or not.
+	 */
 	@Override
 	public int parseNext(CharBuffer buff) {
 		if(!buff.hasRemaining())
@@ -119,6 +188,9 @@ public class SMDParserChain implements SMDParser {
 		return SMD_BLOCK_CONTINUE;
 	}
 
+	/**
+	 * Compact the markers along with buffer compacting
+	 */
 	@Override
 	public int compact(int position) {
 		int min = position;
@@ -130,6 +202,9 @@ public class SMDParserChain implements SMDParser {
 		return min;
 	}
 
+	/**
+	 * Get the markers, there are 4096 element by default.
+	 */
 	@Override
 	public SMDMarkers markers() {
 		return markers;
