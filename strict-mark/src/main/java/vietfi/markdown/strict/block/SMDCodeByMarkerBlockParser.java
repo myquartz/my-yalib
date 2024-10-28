@@ -1,0 +1,207 @@
+package vietfi.markdown.strict.block;
+
+import java.nio.CharBuffer;
+
+import vietfi.markdown.strict.SMDMarkers;
+import vietfi.markdown.strict.SMDParser;
+
+/**
+ * parsing code block by marker, optionally with language for highlighting
+ * This implementation will parse all the code at once (until got the end marker).
+ * 
+ * example:
+ * ~~~ javascript
+ * var x = "your code, any text, <> escaped."
+ * ~~~
+ * 
+ * The markers of this kind are:
+ * 
+ * < ~~~ space [language name] space \n [code line 1\n] [code line 2\n] ... [the last code line\n] ~~~ > \n
+ * 
+ */
+public class SMDCodeByMarkerBlockParser implements SMDParser {
+
+	protected final SMDMarkers markers;
+	protected final boolean internalMarkers;
+	
+	public SMDCodeByMarkerBlockParser() {
+		this.markers = new SMDMarkers(8);
+		internalMarkers = true;
+	}
+	
+	public SMDCodeByMarkerBlockParser(SMDMarkers markers) {
+		this.markers = markers;
+		internalMarkers = false;
+	}
+
+	protected char markerType = '\0';
+	
+	@Override
+	public int parseNext(CharBuffer buffer) {		
+		if(!buffer.hasRemaining())
+			return SMD_VOID;
+		
+		char ch = '\0';
+		char ch1 = '\0';
+		char ch2 = '\0';
+		int chType;
+		int startPos;
+		int npos = startPos = buffer.position();
+		boolean foundBeginning = false;
+		//mark for reset if needed
+		buffer.mark();
+		
+		if(markerType == '\0') {
+	    	
+			markerType = buffer.get();
+			chType = Character.getType(markerType);
+			npos++;
+			if(!(markerType == '~' || markerType == '`')) {
+				markerType = '\0';
+				buffer.reset();
+				return SMD_BLOCK_INVALID;
+			}
+			
+			int c = 2; //more 2
+			while(buffer.hasRemaining()) {
+				ch = buffer.get();
+				chType = Character.getType(ch);
+				npos++;
+				if((c > 0 && markerType != ch) || (c <= 0 && (ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR))) {
+					break;
+				}
+				if(c < 0 && !Character.isWhitespace(ch))
+					break;
+				c--;
+			}
+			
+			//not enough marker
+			if(c > 0) {
+				markerType = '\0';
+				
+				if(!buffer.hasRemaining()) {
+					buffer.reset();
+					return SMD_VOID;
+				}
+				buffer.reset();
+				return SMD_BLOCK_INVALID;
+			}
+
+	    	//enough ~~~ characters
+	    	foundBeginning = true;
+	    	markers.addStartMarker(STATE_CODE_BLOCK, startPos);
+	    	
+			if(ch != '\n') {
+				//start language definition after the spaces trailing of ``` or ~~~
+				markers.addStartContent(STATE_CODE_LANGUAGE, npos - 1);
+				
+				boolean isNewLine = false;
+				boolean languageDone = false;
+				while(buffer.hasRemaining()) {
+					ch = buffer.get();
+					chType = Character.getType(ch);
+					npos++;
+					if(Character.isWhitespace(ch)) {
+						if(!languageDone) {
+							markers.addStopContent(STATE_CODE_LANGUAGE, npos - 1);
+							languageDone = true;
+						}
+						if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {//ok, end to parser
+							isNewLine = true;
+							break;
+						}
+						//else jump over trailing spaces
+					}
+					else if(languageDone) //invalid 
+						break;
+				}
+				
+				if(!isNewLine) {
+					//roll back
+					markers.rollbackLastContentStart(STATE_CODE_LANGUAGE);
+					markers.rollbackLastMarkerContentStart(STATE_CODE_BLOCK);
+					markerType = '\0';
+					if(languageDone || !buffer.hasRemaining()) {
+						buffer.reset();
+						return SMD_VOID;
+					}
+					buffer.reset();
+					return SMD_BLOCK_INVALID;
+				}
+			}
+			//else no add content of Code Language
+		}
+		
+		if(ch == '\n' && foundBeginning) {
+			markers.addStartContent(STATE_CODE_BLOCK, npos);
+			ch = '\0'; //for next reading
+		}
+				
+		//read the line until found marker
+		boolean endingFound = false;
+		while(buffer.hasRemaining() || ch != '\0') {
+			if(ch == '\0')
+				ch = buffer.get();
+			chType = Character.getType(ch);
+			npos++;
+        	
+			if(endingFound) {//waiting for space or new line
+				if(ch != markerType && !Character.isWhitespace(ch)) {
+					markerType = '\0';
+					return SMD_BLOCK_INVALID;
+				}
+				if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {//gracefully
+					//finally,  add marker stop
+					markers.addStopMarker(STATE_CODE_BLOCK, npos);
+					markerType = '\0';
+					return SMD_BLOCK_END;
+				}
+				//loop for need more characters
+			}
+			else {
+				if(ch != '\0' && ch1 == '\0' && buffer.hasRemaining())
+	        		ch1 = buffer.get();
+	        	if(ch1 != '\0' && ch2 == '\0' && buffer.hasRemaining())
+	    			ch2 = buffer.get();
+	        	if(ch == markerType && ch1 == markerType && ch2 == markerType) {
+					//ending found, add content stop
+	        		markers.addStopContent(STATE_CODE_BLOCK, npos - 1);
+					endingFound = true;
+	        	}
+			}
+			
+			//shift one
+        	ch = ch1;
+        	ch1 = ch2;
+        	ch2 = '\0';
+		}
+		
+		if(endingFound) {
+			markers.rollbackLastContentStart(STATE_CODE_BLOCK);
+			if(foundBeginning) { //it is the same call
+				markers.rollbackLastContentStart(STATE_CODE_LANGUAGE);
+				markers.rollbackLastMarkerContentStart(STATE_CODE_BLOCK);
+			}
+			buffer.reset();
+			return SMD_VOID;
+		}
+		//continue next block
+		return SMD_BLOCK_CONTINUE;
+	}
+
+	@Override
+	public int compact(int position) {
+		if(this.internalMarkers) {
+			int r = markers.compactMarkers(position);
+			if(r <= 0)
+				return 0;
+		}
+		return position;
+	}
+
+	@Override
+	public SMDMarkers markers() {
+		return this.markers;
+	}
+
+}
