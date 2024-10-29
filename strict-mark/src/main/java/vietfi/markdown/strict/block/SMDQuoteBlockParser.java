@@ -24,14 +24,14 @@ import vietfi.markdown.strict.line.SMDLineParser;
 import vietfi.markdown.strict.line.SMDQuoteLineParser;
 
 /**
- * Quote block parser. Parsing the quote block by prefix '>' + space character.
+ * Quote block parser. Parsing the quote block by prefix '&gt;' + space character.
  * 
  * example 1:
  * 
- * > This quoted string or paragraph is
- * > **wrapped** in quoted. It support **bold** or [link](http://to.web/site) likes paragraph.
- * >
- * > Another paragraph.
+ * &gt; This quoted string or paragraph is
+ * &gt; **wrapped** in quoted. It support **bold** or [link](http://to.web/site) likes paragraph.
+ * &gt;
+ * &gt; Another paragraph.
  * 
  * then it produces:
  * 
@@ -43,10 +43,10 @@ import vietfi.markdown.strict.line.SMDQuoteLineParser;
  * The markers pattern are:
  * 
  * &lt;quote
- * '>' space &lt;paragraph&lt;text[This quoted string or paragraph is] text>\n
- * '>' space &lt;**[wrapped]**> in quoted. It support &lt;**[bold]**> or &lt;[link][http://to.web/site]> likes paragraph.] text> paragraph>\n
- * '>' space &lt;paragraph&lt;text [Another paragraph.] text>paragraph>\n
- * quote>
+ * '&gt;' space &lt;paragraph&lt;text[This quoted string or paragraph is] text&gt;\n
+ * '&gt;' space &lt;**[wrapped]**&gt; in quoted. It support &lt;**[bold]**&gt; or &lt;[link][http://to.web/site]&gt; likes paragraph.] text&gt; paragraph&gt;\n
+ * '&gt;' space &lt;paragraph&lt;text [Another paragraph.] text&gt;paragraph&gt;\n
+ * quote&gt;
  * 
  */
 public class SMDQuoteBlockParser implements SMDParser {

@@ -61,7 +61,7 @@ public class SMDTextLineParser extends SMDLineParser {
      * If parse success, buffer will be consumed until the last of new line character (inclusive). 
      * Otherwise the position will be reset back to the original position.
      *  
-     * @param buffer
+     * @param buffer input buffer to parse
      * @return the parsing result
      */
     @Override

@@ -29,8 +29,8 @@ import vietfi.markdown.strict.SMDMarkers;
  * 
  * * Item 1 here with *italic* or [link](http://test.link)
  *   Next line **with bold text**.
- *   > Quote of line
- *   > another quote of __underscore__ line
+ *   &gt; Quote of line
+ *   &gt; another quote of __underscore__ line
  *   
  *   1. Sub ordered list
  *   2. another item
@@ -40,15 +40,15 @@ import vietfi.markdown.strict.SMDMarkers;
  * <pre>
  * 
  * &lt;UL
- * '*' space&lt;LI	para_text[Item 1 here with &lt;*[italic]*> or &lt;[link][http://test.link]>\n]
- * space space	para_text[Next line &lt;**[with bold text]**>.\n]
- * space space	&lt;quote '>'	para_text[Quote of line\n]
- * space space	'>'	para_text[another quote of &lt;__[underscore]__> line\n]\n>
- * space space	&lt;OL&lt;LI	para_text[Sub ordered list\n]>
- * 		   		&lt;LI	para_text[another item\n]>
- * 				>
- * >
- * * space &lt;LI	para_text[the next item\n]>>
+ * '*' space&lt;LI	para_text[Item 1 here with &lt;*[italic]*&gt; or &lt;[link][http://test.link]&gt;\n]
+ * space space	para_text[Next line &lt;**[with bold text]**&gt;.\n]
+ * space space	&lt;quote '&gt;'	para_text[Quote of line\n]
+ * space space	'&gt;'	para_text[another quote of &lt;__[underscore]__&gt; line\n]\n&gt;
+ * space space	&lt;OL&lt;LI	para_text[Sub ordered list\n]&gt;
+ * 		   		&lt;LI	para_text[another item\n]&gt;
+ * 				&gt;
+ * &gt;
+ * * space &lt;LI	para_text[the next item\n]&gt;&gt;
  * 
  * </pre>
  */
@@ -158,7 +158,7 @@ public class SMDListItemParser extends SMDLineParser {
 	/**
 	 * Parsing start at position of the char after the marker, or one indentSpaces (1 tab or 2-4 spaces).
 	 *
-	 * Note: the buffer position started right before the 'I' character. and 'N', '>' consecutive repeating.
+	 * Note: the buffer position started right before the 'I' character. and 'N', '&gt;' consecutive repeating.
 	 *   
 	 *   @param buffer input data to parse
 	 *   @return SMD line result code.

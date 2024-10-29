@@ -25,7 +25,7 @@ import vietfi.markdown.strict.line.HtmlEscapeUtil;
 public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 
 	/**
-	 * max size of URL or encoded `text` string in the &lt;a> tag.
+	 * max size of URL or encoded `text` string in the &lt;a&gt; tag.
 	 */
 	public static final int MINIMUM_BUFFER_SIZE = 256;
 	
