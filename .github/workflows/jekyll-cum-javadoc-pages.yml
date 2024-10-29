@@ -27,20 +27,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
       - name: Set up JDK 11
         uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: generate Java doc
-        run: mkdir -p ./_site/strict-mark/javadoc && javadoc -d ./_site/strict-mark/javadoc -sourcepath strict-mark/src/main/java -subpackages vietfi
+        run: mkdir -p ${GITHUB_WORKSPACE}/docs/strict-mark/javadoc && javadoc -d ${GITHUB_WORKSPACE}/docs/strict-mark/javadoc -sourcepath ${GITHUB_WORKSPACE}/strict-mark/src/main/java -subpackages vietfi
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
