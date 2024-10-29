@@ -40,7 +40,7 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: generate Java doc
-        run: javadoc -d ./_site/strict-mark/javadoc -sourcepath strict-mark/src/main/java -subpackages vietfi
+        run: mkdir -p ./_site/strict-mark/javadoc && javadoc -d ./_site/strict-mark/javadoc -sourcepath strict-mark/src/main/java -subpackages vietfi
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
