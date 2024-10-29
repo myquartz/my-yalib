@@ -42,10 +42,10 @@ import vietfi.markdown.strict.line.SMDQuoteLineParser;
  * 
  * The markers pattern are:
  * 
- * <quote
- * '>' space <paragraph<text[This quoted string or paragraph is] text>\n
- * '>' space <**[wrapped]**> in quoted. It support <**[bold]**> or <[link][http://to.web/site]> likes paragraph.] text> paragraph>\n
- * '>' space <paragraph<text [Another paragraph.] text>paragraph>\n
+ * &lt;quote
+ * '>' space &lt;paragraph&lt;text[This quoted string or paragraph is] text>\n
+ * '>' space &lt;**[wrapped]**> in quoted. It support &lt;**[bold]**> or &lt;[link][http://to.web/site]> likes paragraph.] text> paragraph>\n
+ * '>' space &lt;paragraph&lt;text [Another paragraph.] text>paragraph>\n
  * quote>
  * 
  */

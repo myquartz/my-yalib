@@ -26,7 +26,6 @@ public interface SMDHtmlRender {
 	 * @param markers the markers
 	 * @param buffer (source data to copy)
 	 * @param outputBuilder the output buffer.
-	 * @return number of written characters to outputBuilder.
 	 */
 	public void produceHtml(SMDMarkers markers, CharBuffer buffer, StringBuilder outputBuilder);
 	

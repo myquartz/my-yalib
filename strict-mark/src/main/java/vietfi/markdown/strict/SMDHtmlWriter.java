@@ -27,7 +27,7 @@ public interface SMDHtmlWriter {
 	 * 
 	 * @param markers the markers
 	 * @param buffer (source data to copy)
-	 * @param outputBuilder the output buffer.
+	 * @param outputBuffer the output buffer.
 	 * @return true if written completed, false if there is no space left (remaining not enough), needing another call to appending out (after the buffer clean).
 	 */
 	public boolean appendHtml(SMDMarkers markers, CharBuffer buffer, CharBuffer outputBuffer);

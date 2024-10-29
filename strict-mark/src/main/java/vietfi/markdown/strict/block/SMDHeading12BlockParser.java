@@ -33,11 +33,11 @@ import vietfi.markdown.strict.SMDParser;
  * 
  * The markers's pattern is:
  * 
- * <[Heading 1 here]\n=====\n>
+ * &lt;[Heading 1 here]\n=====\n&gt;
  * 
  * or
  * 
- * <[Heading 2 here]\n-----\n>
+ * &lt;[Heading 2 here]\n-----\n&gt;
  * 
  */
 public class SMDHeading12BlockParser implements SMDParser {

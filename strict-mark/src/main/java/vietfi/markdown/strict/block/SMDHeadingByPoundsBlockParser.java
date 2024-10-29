@@ -31,11 +31,11 @@ import vietfi.markdown.strict.SMDParser;
  * 
  * The markers's pattern is:
  * 
- * <# space [Heading 1 here]\n>
+ * &lt;# space [Heading 1 here]\n&gt;
  * 
  * or
  * 
- * <## space tab [Heading 2 here]\n>
+ * &lt;## space tab [Heading 2 here]\n&gt;
  * 
  */
 

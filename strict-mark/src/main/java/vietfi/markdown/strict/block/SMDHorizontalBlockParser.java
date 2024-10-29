@@ -33,15 +33,15 @@ import vietfi.markdown.strict.SMDParser;
  * 
  * The markers's pattern is:
  * 
- * <====\n>
+ * &lt;====\n&gt;
  * 
  * or
  * 
- * <---\n>
+ * &lt;---\n&gt;
  * 
  * or 
  * 
- * <____\n>
+ * &lt;____\n&gt;
  * 
  */
 

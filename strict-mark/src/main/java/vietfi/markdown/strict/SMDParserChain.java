@@ -114,8 +114,10 @@ public class SMDParserChain implements SMDParser {
 	 *
 	 * This chain has implemented all syntax of Strict Mark Syntax  
 	 * 
-	 * {@link https://github.com/myquartz/my-yalib/tree/main/strict-mark/docs)}
+	 * Please review document at https://github.com/myquartz/my-yalib/tree/main/strict-mark/docs
+	 * 
 	 * @return a parser for page parsing
+	 * 
 	 */
 	public static SMDParser createParserOfStandard() {
 		return createParserOfStandard(4096);

@@ -39,16 +39,16 @@ import vietfi.markdown.strict.SMDMarkers;
  * It produces the markers:
  * <pre>
  * 
- * <UL
- * '*' space<LI	para_text[Item 1 here with <*[italic]*> or <[link][http://test.link]>\n]
- * space space	para_text[Next line <**[with bold text]**>.\n]
- * space space	<quote '>'	para_text[Quote of line\n]
- * space space	'>'	para_text[another quote of <__[underscore]__> line\n]\n>
- * space space	<OL<LI	para_text[Sub ordered list\n]>
- * 		   		<LI	para_text[another item\n]>
+ * &lt;UL
+ * '*' space&lt;LI	para_text[Item 1 here with &lt;*[italic]*> or &lt;[link][http://test.link]>\n]
+ * space space	para_text[Next line &lt;**[with bold text]**>.\n]
+ * space space	&lt;quote '>'	para_text[Quote of line\n]
+ * space space	'>'	para_text[another quote of &lt;__[underscore]__> line\n]\n>
+ * space space	&lt;OL&lt;LI	para_text[Sub ordered list\n]>
+ * 		   		&lt;LI	para_text[another item\n]>
  * 				>
  * >
- * * space <LI	para_text[the next item\n]>>
+ * * space &lt;LI	para_text[the next item\n]>>
  * 
  * </pre>
  */
@@ -159,35 +159,6 @@ public class SMDListItemParser extends SMDLineParser {
 	 * Parsing start at position of the char after the marker, or one indentSpaces (1 tab or 2-4 spaces).
 	 *
 	 * Note: the buffer position started right before the 'I' character. and 'N', '>' consecutive repeating.
-	 * 
-	 *	* Item 1 here with *italic* or [link](http://test.link)
-	 *	  Next line **with bold text**.
-	 *	  > Quote of line
-	 *	  > another quote of __underscore__ line
-	 *		
-	 *	  1. Sub ordered list
-	 *	  2. another item
-	 *	(two empty lines)
-	 *
-	 *	it will be parse to markers:
-	 *
-	 *	- STATE: itemLines = 0, gotEnded = true; parser = Unknown 
-	 *	<LI para_text[Item 1 here with <*[italic]*> or <[link][http://test.link]>\n]
-	 *	- STATE: itemLines = 1, gotEnded = false; parser = Paragraph
-	 * 		para_text[Next line <**[with bold text]**>.\n]
-	 *	- STATE: itemLines = 2, gotEnded = false; parser = Paragraph
-	 * 		<quote	para_text[Quote of line\n]
-	 *	- STATE: itemLines = 3, gotEnded = false; parser = Quote
-	 * 			para_text[another quote of <__[underscore]__> line\n]
-	 *	- STATE: itemLines = 4, gotEnded = false; parser = Quote
-	 *			\n>
-	 *	- STATE: itemLines = 5, gotEnded = false; parser = Unknown
-	 * 		<OL<LI	para_text[Sub ordered list\n]>
-	 *	- STATE: itemLines = 6, gotEnded = false; parser = OrderedList 
-	 * 		   <LI	para_text[another item\n]>
-	 *	- STATE: itemLines = 7, gotEnded = false; parser = OrderedList
-	 * 		\n>
-	 *	- STATE: itemLines = 8, gotEnded = true; parser = NONE
 	 *   
 	 *   @param buffer input data to parse
 	 *   @return SMD line result code.
@@ -566,10 +537,9 @@ public class SMDListItemParser extends SMDLineParser {
 	}
 
 	/**
-	 * Catch new line within number of spaces, or tab (spaceCount  = space + 4 * tab)
+	 * detect whether is it a blank line?
 	 * 
 	 * @param buffer
-	 * @param spaceCount
 	 * @return
 	 */
 	public static boolean detectBlankLine(CharBuffer buffer) {
@@ -663,6 +633,7 @@ public class SMDListItemParser extends SMDLineParser {
 	 * -1: not enough characters
 	 * 
 	 * @param buffer
+	 * @param subListItemType
 	 * @return 
 	 */
 	public static byte lookForwardUnorderedList(CharBuffer buffer, char subListItemType) {

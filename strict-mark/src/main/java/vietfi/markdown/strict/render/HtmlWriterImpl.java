@@ -24,16 +24,11 @@ import vietfi.markdown.strict.line.HtmlEscapeUtil;
 
 public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 
-	public static final int MINIMUM_BUFFER_SIZE = 256; //max size of URL or encoded `text` string in <a>`Text`</>
+	/**
+	 * max size of URL or encoded `text` string in the &lt;a> tag.
+	 */
+	public static final int MINIMUM_BUFFER_SIZE = 256;
 	
-	//max size of begin tag
-    protected static final int START_TAG_ROOM = 16 + Math.max(
-    		Math.max(TAG_BOLD_BEGIN.length(), TAG_CODE_BEGIN.length()),
-    		Math.max(TAG_A_URL_BEGIN.length(), TAG_IMG_URL_BEGIN.length())); 
-    protected static final int END_TAG_ROOM = 16 + Math.max(
-    		Math.max(TAG_BOLD_BEGIN.length(), TAG_CODE_BEGIN.length()),
-    		Math.max(TAG_A_URL_BEGIN.length(), TAG_IMG_URL_BEGIN.length()));
-    
     private int contentOutput = 0;
 	    
 	@Override

@@ -157,7 +157,6 @@ public class HtmlEscapeUtil {
      * @param begin the starting index in `buffer` (inclusive)
      * @param end the ending index in `buffer` (exclusive)
      * @param outputBuilder the `StringBuilder` receiving the escaped HTML text
-     * @return the final position reached in `buffer`, either up to `end` or `buffer.length`
      * 
      * @see #appendWithEscapeHtml(boolean, CharBuffer, int, int, StringBuilder)
      */
@@ -189,7 +188,6 @@ public class HtmlEscapeUtil {
      * @param begin the starting index in `buffer` (inclusive)
      * @param end the ending index in `buffer` (exclusive)
      * @param outputBuilder the `StringBuilder` receiving the escaped HTML text
-     * @return the final position reached in `buffer`, either up to `end` or `buffer.length`
      */
     public static void appendWithEscapeHtml(boolean safeQuote, CharBuffer buffer, int begin, int end, StringBuilder outputBuilder) {
     	if(buffer.hasArray()) {

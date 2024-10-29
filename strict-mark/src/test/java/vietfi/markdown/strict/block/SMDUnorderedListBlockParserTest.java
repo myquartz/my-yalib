@@ -1,7 +1,5 @@
 package vietfi.markdown.strict.block;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.CharBuffer;

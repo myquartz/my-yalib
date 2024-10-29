@@ -54,7 +54,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           javadoc-branch: main
           java-version: 11
-          subdirectories: strict-mark/javadoc
+          javadoc-source-folder: strict-mark/javadoc
           target-folder: strict-mark/javadoc
           project: maven
           custom-command: javadoc -d strict-mark/javadoc -sourcepath strict-mark/src/main/java -subpackages vietfi

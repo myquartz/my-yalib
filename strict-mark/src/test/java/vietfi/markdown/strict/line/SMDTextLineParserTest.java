@@ -1,7 +1,7 @@
 package vietfi.markdown.strict.line;
 
-import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.StringWriter;
 import java.nio.CharBuffer;

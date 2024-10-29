@@ -26,12 +26,12 @@ import vietfi.markdown.strict.SMDParser;
  * 
  * example:
  * ~~~ javascript
- * var x = "your code, any text, <> escaped."
+ * var x = "your code, any text, &lt;&gt; escaped."
  * ~~~
  * 
  * The markers of this kind are:
  * 
- * < ~~~ space [language name] space \n [code line 1\n] [code line 2\n] ... [the last code line\n] ~~~ > \n
+ * &lt; ~~~ space [language name] space \n [code line 1\n] [code line 2\n] ... [the last code line\n] ~~~ &gt; \n
  * 
  */
 public class SMDCodeByMarkerBlockParser implements SMDParser {

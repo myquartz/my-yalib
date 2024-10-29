@@ -109,8 +109,8 @@ public class SMDMarkers {
     /**
      * Get state at index
      * 
-     * @param index
-     * @return
+     * @param index of markers
+     * @return the state of marker
      */
 	public int getMarkerState(int index) {
 		return markerState(markers[index]);
@@ -306,9 +306,8 @@ public class SMDMarkers {
 	}
 	
 	/**
-     * is marker start
+     * Checks the cursor is marker start?
      * 
-     * @param index
      * @return
      */
 	public boolean cursorIsMarkerStart() {
@@ -318,9 +317,8 @@ public class SMDMarkers {
 	}
 	
 	/**
-     * is content start
+     * Checks cursor is content start?
      * 
-     * @param index
      * @return
      */
 	public boolean cursorIsContentStart() {
@@ -330,9 +328,8 @@ public class SMDMarkers {
 	}
 	
 	/**
-     * is marker start
+     * Checks the cursor is marker stop
      * 
-     * @param index
      * @return
      */
 	public boolean cursorIsMarkerStop() {
@@ -342,9 +339,8 @@ public class SMDMarkers {
 	}
 	
 	/**
-     * is marker start
+     * Checks the cursor is content stop
      * 
-     * @param index
      * @return
      */
 	public boolean cursorIsContentStop() {

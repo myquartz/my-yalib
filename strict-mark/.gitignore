@@ -25,6 +25,7 @@ build
 target
 out
 node_modules
+javadoc
 
 !/**/src/**/bin
 !/**/src/**/build

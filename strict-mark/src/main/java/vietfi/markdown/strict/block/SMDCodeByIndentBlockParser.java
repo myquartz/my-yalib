@@ -28,15 +28,15 @@ import vietfi.markdown.strict.line.SMDLineParser;
  * 
  * example 1:
  * \s //javascript
- * \s var x = "your code, any text, <> escaped.";
+ * \s var x = "your code, any text, &lt;&gt; escaped.";
  * 
  * example 2:
  * \t //javascript
- * \t var x = "your code, any text, <> escaped."; 
+ * \t var x = "your code, any text, &lt;&gt; escaped."; 
  * 
  * The markers of this kind are:
  * 
- * < space [code line 1\n] space [code line 2\n] ... [the last code line\n ]> \n
+ * &lt; space [code line 1\n] space [code line 2\n] ... [the last code line\n ]&gt; \n
  * 
  */
 public class SMDCodeByIndentBlockParser implements SMDParser {
