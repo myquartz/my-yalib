@@ -50,7 +50,7 @@ indent2Spaces   = space, space, [space] | tab;
 
 indent3Spaces   = space, space, space, [space] | tab;
 
-horizontal    = ("-", "-", {"-"} | "_", "_", {"_"} | "=", "=", {"="}), newLine;
+horizontal    = ("-", "-", {"-"}- | "_", "_", {"_"}- | "=", "=", {"="}-), newLine;
 
 other = { unparseable }, newLine ;
 
