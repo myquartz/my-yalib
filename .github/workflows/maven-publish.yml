@@ -27,7 +27,7 @@ jobs:
         cache: maven
         
     - name: Build strict-mark
-      run: mvn -B --no-transfer-progress --update-snapshots package install --file strict-mark && mkdir staging && cp target/*.jar staging
+      run: mvn -B --no-transfer-progress --update-snapshots package install --file strict-mark && mkdir staging && cp strict-mark/target/*.jar staging
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
@@ -54,5 +54,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           javadoc-branch: main
           java-version: 11
-          target-folder: strict-markdown/javadoc
+          subdirectories: strict-mark/javadoc
+          target-folder: strict-mark/javadoc
           project: maven
+          custom-command: javadoc -d strict-mark/javadoc -sourcepath strict-mark/src/main/java -subpackages vietfi
+
