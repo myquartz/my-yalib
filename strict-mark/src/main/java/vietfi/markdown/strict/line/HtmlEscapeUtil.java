@@ -68,18 +68,21 @@ public class HtmlEscapeUtil {
     }
 
     /**
+     * Writes text from the input `buffer` to the `output` buffer, escaping unsafe characters for HTML.
+     * The method processes characters from the `begin` position (inclusive) to the `end` position (exclusive),
+     * ensuring that potentially unsafe characters are escaped to produce safe HTML content.
      * 
-     * Print text (unsafe) characters in `buffer` from `begin` position up to `end` position (exclusive), to `output` buffer (HTML content with safe escape char).
-     * The character will be escape (if needed), the output buffer has to reserve a space of `reserved` length at the end.
-     * If not enough buffer space left, the routine will return position it can printed to.  
+     * The `output` buffer should have a reserved space of `reserved` length at its end to accommodate escaped characters.
+     * If there isn't enough space left in `output` to complete the operation, the method returns the last position 
+     * it was able to process, either up to `end`, `buffer.limit()`, or until `output` is full, whichever comes first.
      * 
-     * @param safeQuote true if required to safe quote
-     * @param buffer input characters buffer.
-     * @param begin start position (inclusive)
-     * @param end end position (exclusive)
-     * @param reserved number of space's reserved
-     * @param output the output buffer
-     * @return the last position it can print out, should be `end` or buffer.limit() or position when output is full which is the least.
+     * @param safeQuote specifies whether quotes should be safely escaped
+     * @param buffer the input character buffer containing the text to be written
+     * @param begin the starting position in `buffer` (inclusive)
+     * @param end the ending position in `buffer` (exclusive)
+     * @param reserved the number of characters reserved at the end of the `output` buffer
+     * @param output the output buffer to receive the processed and escaped text
+     * @return the final position up to which characters were successfully processed and written
      */
     public static int writeWithEscapeHtml(boolean safeQuote, CharBuffer buffer, int begin, int end, int reserved, CharBuffer output) {
     	int upTo = Math.min(end, buffer.limit()); //assuming to capacity
@@ -103,18 +106,23 @@ public class HtmlEscapeUtil {
     }
     
     /**
+     * Writes characters from the `buffer` array to the `output` buffer, escaping unsafe characters for HTML content.
+     * This method processes characters from the specified `begin` index (inclusive) up to `end` index (exclusive),
+     * escaping characters as needed to produce safe HTML.
      * 
-     * Print text (unsafe) characters in `buffer` from `begin` position up to `end` position (exclusive), to `output` buffer (HTML content with safe escape char).
-     * The character will be escape (if needed), the output buffer has to reserve a space of `reserved` length at the end.
-     * If not enough buffer space left, the routine will return position it can printed to.  
+     * Ensure the `output` buffer has a reserved space of `reserved` length at its end to accommodate escaped characters.
+     * If the output buffer does not have sufficient space, the method returns the last position in `buffer` that was 
+     * successfully processed, up to `end`, `buffer.length`, or the point where `output` became full, whichever is reached first.
      * 
-     * @param safeQuote true if required to safe quote
-     * @param buffer input characters buffer.
-     * @param begin start position (inclusive)
-     * @param end end position (exclusive)
-     * @param reserved number of space's reserved
-     * @param output the output buffer
-     * @return the last position it can print out, should be `end` or buffer.limit() or position when output is full which is the least.
+     * @param safeQuote if true, quotes will be escaped for HTML safety
+     * @param buffer the input character array containing text to be processed
+     * @param begin the starting index in `buffer` (inclusive)
+     * @param end the ending index in `buffer` (exclusive)
+     * @param reserved the number of characters reserved at the end of the `output` buffer
+     * @param output the buffer receiving the escaped HTML text
+     * @return the final position reached in `buffer`, either up to `end`, `buffer.length`, or the point where `output` filled up
+     * 
+     * @see #writeWithEscapeHtml(boolean, CharBuffer, int, int, int, CharBuffer)
      */
     public static int writeWithEscapeHtml(boolean safeQuote, char[] buffer, int begin, int end, int reserved, CharBuffer output) {
     	int upTo = Math.min(end, buffer.length); //assuming to the end
@@ -138,19 +146,23 @@ public class HtmlEscapeUtil {
     }
     
     /**
+     * Appends characters from the `buffer` array to the `outputBuilder`, escaping unsafe characters for HTML.
+     * This method processes characters from the specified `begin` index (inclusive) up to the `end` index (exclusive),
+     * ensuring that potentially unsafe characters are escaped to produce HTML-safe content.
      * 
-     * Print text (unsafe) characters in `buffer` from `begin` position up to `end` position (exclusive), to `output` string builder (HTML content with safe escape char).
-     * The character will be escape (if needed), the output buffer has to reserve a space of `reserved` length at the end.
-     * If not enough buffer space left, the routine will return position it can printed to.  
+     * Since `StringBuilder` automatically expands its buffer, no reserved space is required.
      * 
-     * @param safeQuote true if required to safe quote
-     * @param buffer input characters buffer.
-     * @param begin start position (inclusive)
-     * @param end end position (exclusive)
-     * @param output the string builder
-     * @return the last position it can print out, should be `end` or buffer.limit() or position when output is full which is the least.
+     * @param safeQuote if true, quotes will also be escaped for HTML safety
+     * @param buffer the input character array containing the text to be processed
+     * @param begin the starting index in `buffer` (inclusive)
+     * @param end the ending index in `buffer` (exclusive)
+     * @param outputBuilder the `StringBuilder` receiving the escaped HTML text
+     * @return the final position reached in `buffer`, either up to `end` or `buffer.length`
+     * 
+     * @see #appendWithEscapeHtml(boolean, CharBuffer, int, int, StringBuilder)
      */
-    public static void appendWithEscapeHtml(boolean safeQuote, char[] buffer, int begin, int end, StringBuilder outputBuilder) {
+    public static void appendWithEscapeHtml(boolean safeQuote, char[] buffer, int begin, int end, StringBuilder outputBuilder)
+ {
     	int upTo = Math.min(end, buffer.length); //assuming to the end
     	if(upTo - begin <= 0)
     		throw new IllegalArgumentException("output's ending is passes over min(end, limit) minus reserved");
@@ -166,17 +178,18 @@ public class HtmlEscapeUtil {
     }
     
     /**
+     * Appends characters from the `buffer` to the `outputBuilder`, escaping unsafe characters for HTML.
+     * This method processes characters from the specified `begin` index (inclusive) up to the `end` index (exclusive),
+     * ensuring that potentially unsafe characters are escaped to produce HTML-safe content.
      * 
-     * Print text (unsafe) characters in `buffer` from `begin` position up to `end` position (exclusive), to `output` string builder (HTML content with safe escape char).
-     * The character will be escape (if needed), the output buffer has to reserve a space of `reserved` length at the end.
-     * If not enough buffer space left, the routine will return position it can printed to.  
+     * Since `StringBuilder` automatically expands its buffer, no reserved space is required.
      * 
-     * @param safeQuote true if required to safe quote
-     * @param buffer input characters buffer.
-     * @param begin start position (inclusive)
-     * @param end end position (exclusive)
-     * @param output the string builder
-     * @return the last position it can print out, should be `end` or buffer.limit() or position when output is full which is the least.
+     * @param safeQuote if true, quotes will also be escaped for HTML safety
+     * @param buffer the input character buffer containing the text to be processed
+     * @param begin the starting index in `buffer` (inclusive)
+     * @param end the ending index in `buffer` (exclusive)
+     * @param outputBuilder the `StringBuilder` receiving the escaped HTML text
+     * @return the final position reached in `buffer`, either up to `end` or `buffer.length`
      */
     public static void appendWithEscapeHtml(boolean safeQuote, CharBuffer buffer, int begin, int end, StringBuilder outputBuilder) {
     	if(buffer.hasArray()) {
