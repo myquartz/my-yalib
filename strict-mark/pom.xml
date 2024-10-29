@@ -2,8 +2,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>vietfi.demo</groupId>
-	<artifactId>MarkdownRender</artifactId>
+	<groupId>vietfi.yalib</groupId>
+	<artifactId>strict-markdown</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
@@ -30,4 +30,12 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub Packages</name>
+			<url>https://maven.pkg.github.com/myquartz/my-yalib</url>
+		</repository>
+	</distributionManagement>
 </project>
