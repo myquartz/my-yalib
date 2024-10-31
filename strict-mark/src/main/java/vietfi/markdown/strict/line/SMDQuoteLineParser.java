@@ -97,6 +97,9 @@ public class SMDQuoteLineParser extends SMDLineParser {
 		//read next char bypass the space
 		while(next == '\n' || ((next == ' ' || next == '\t') && buffer.hasRemaining())) {
 			if(next == '\n') {//it is quote of empty line
+				if(quoteLines == 0) {
+					markers.addStartMarker(STATE_QUOTE_BLOCK, startPos);
+				}
 				quoteLines++;
 				if(paraLines > 0) {
 					markers.addStopMarker(STATE_QUOTE_PARAGRAPH, pos);
