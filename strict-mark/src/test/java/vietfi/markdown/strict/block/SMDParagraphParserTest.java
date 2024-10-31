@@ -45,6 +45,7 @@ public class SMDParagraphParserTest {
 	    
 	    render.produceHtml(parser.markers(), input, sb);
 	    
+	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
 	    		"<p>Simple text without formatting.",
@@ -84,6 +85,52 @@ public class SMDParagraphParserTest {
 	    		"<p>Simple text without formatting.",
 	    		"Unlike others, the paragraph can be parse without any marker.",
 	    		"Goodbye.", 
+	    		"</p>"
+	    };
+	    		
+	    Object[] actual = sb.toString().lines().collect(Collectors.toList()).toArray();
+	    		
+	    assertArrayEquals(expected, actual);
+	}
+	
+	@Test
+	void test2() {
+	    String inputText = "Simple text without formatting.\n" +
+	            "\n" +
+	            "Goodbye.";
+	    System.out.println("----test1-----\n" + inputText + "\n----------");
+	    
+	    CharBuffer input = CharBuffer.wrap(new char[2048]).append(inputText).flip();
+	    SMDParagraphParser parser = new SMDParagraphParser();
+	    StringBuilder sb = new StringBuilder(256);
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_BLOCK_END, r);
+	    
+	    r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_VOID, r);
+	    
+	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
+	    render.produceHtml(parser.markers(), input, sb);
+	    parser.markers().compactMarkers(input.position());
+	    input.compact();
+	    input.append('\n');
+	    
+	    input.flip();
+	    r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_BLOCK_CONTINUE, r);
+	    
+	    parser.endBlock(input.position());
+	    
+	    render.produceHtml(parser.markers(), input, sb);
+	    
+	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
+	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
+	    String[] expected = {
+	    		"<p>Simple text without formatting.",
+	    		"</p>",
+	    		"<p>Goodbye.", 
 	    		"</p>"
 	    };
 	    		

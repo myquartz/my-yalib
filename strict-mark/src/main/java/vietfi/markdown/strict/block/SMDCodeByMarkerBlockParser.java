@@ -59,7 +59,7 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 		char ch = '\0';
 		char ch1 = '\0';
 		char ch2 = '\0';
-		int chType;
+		
 		int startPos;
 		int npos = startPos = buffer.position();
 		boolean foundBeginning = false;
@@ -69,7 +69,6 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 		if(markerType == '\0') {
 	    	
 			markerType = buffer.get();
-			chType = Character.getType(markerType);
 			npos++;
 			if(!(markerType == '~' || markerType == '`')) {
 				markerType = '\0';
@@ -80,9 +79,9 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 			int c = 2; //more 2
 			while(buffer.hasRemaining()) {
 				ch = buffer.get();
-				chType = Character.getType(ch);
+				
 				npos++;
-				if((c > 0 && markerType != ch) || (c <= 0 && (ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR))) {
+				if((c > 0 && markerType != ch) || (c <= 0 && (ch == '\n' || ch == '\u001C'))) {
 					break;
 				}
 				if(c < 0 && !Character.isWhitespace(ch))
@@ -90,8 +89,8 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 				c--;
 			}
 			
-			//not enough marker
-			if(c > 0) {
+			//not enough marker or got the line end
+			if(c > 0 || ch == '\u001C') {
 				markerType = '\0';
 				
 				if(!buffer.hasRemaining()) {
@@ -114,14 +113,14 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 				boolean languageDone = false;
 				while(buffer.hasRemaining()) {
 					ch = buffer.get();
-					chType = Character.getType(ch);
+					
 					npos++;
 					if(Character.isWhitespace(ch)) {
 						if(!languageDone) {
 							markers.addStopContent(STATE_CODE_LANGUAGE, npos - 1);
 							languageDone = true;
 						}
-						if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {//ok, end to parser
+						if(ch == '\n' || ch == '\u001C') {//ok, end to parser
 							isNewLine = true;
 							break;
 						}
@@ -131,16 +130,16 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 						break;
 				}
 				
-				if(!isNewLine) {
+				if(!isNewLine || ch == '\u001C') {
+					boolean notRemain = !buffer.hasRemaining();
+					buffer.reset();
 					//roll back
 					markers.rollbackLastContentStart(STATE_CODE_LANGUAGE);
 					markers.rollbackLastMarkerContentStart(STATE_CODE_BLOCK);
 					markerType = '\0';
-					if(languageDone || !buffer.hasRemaining()) {
-						buffer.reset();
+					if(languageDone || notRemain) {
 						return SMD_VOID;
 					}
-					buffer.reset();
 					return SMD_BLOCK_INVALID;
 				}
 			}
@@ -157,15 +156,16 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 		while(buffer.hasRemaining() || ch != '\0') {
 			if(ch == '\0')
 				ch = buffer.get();
-			chType = Character.getType(ch);
+			
 			npos++;
         	
 			if(endingFound) {//waiting for space or new line
 				if(ch != markerType && !Character.isWhitespace(ch)) {
 					markerType = '\0';
+					buffer.reset();
 					return SMD_BLOCK_INVALID;
 				}
-				if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {//gracefully
+				if(ch == '\n' || ch == '\u001C') {//gracefully
 					//finally,  add marker stop
 					markers.addStopMarker(STATE_CODE_BLOCK, npos);
 					markerType = '\0';
@@ -174,6 +174,12 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 				//loop for need more characters
 			}
 			else {
+				if(ch == '\u001C') {
+					//stop parsing
+	        		markers.addStopContentMarker(STATE_CODE_BLOCK, npos - 1, npos);
+	        		markerType = '\0';
+					return SMD_BLOCK_END;
+				}
 				if(ch != '\0' && ch1 == '\0' && buffer.hasRemaining())
 	        		ch1 = buffer.get();
 	        	if(ch1 != '\0' && ch2 == '\0' && buffer.hasRemaining())
@@ -204,6 +210,15 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 		return SMD_BLOCK_CONTINUE;
 	}
 
+	
+	@Override
+	public void endBlock(int position) {
+		if(markerType != '\0') {
+			markers.addStopContentMarker(STATE_CODE_BLOCK, position, position);
+    		markerType = '\0';
+		}
+	}
+	
 	@Override
 	public int compact(int position) {
 		if(this.internalMarkers) {

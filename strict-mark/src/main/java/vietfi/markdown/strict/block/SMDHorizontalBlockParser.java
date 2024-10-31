@@ -83,11 +83,10 @@ public class SMDHorizontalBlockParser implements SMDParser {
 		}
 		
 		char ch = '\0';
-		int chType = 0;
 		int c = 2; //more 2 of marker, markers can be longer
 		while(buff.hasRemaining()) {
 			ch = buff.get();
-			chType = Character.getType(ch);
+			
 			pos++;
 			if(c > 0 && markerType != ch
 				|| c < 0 && markerType != ch && !Character.isWhitespace(ch)) {
@@ -97,7 +96,7 @@ public class SMDHorizontalBlockParser implements SMDParser {
 				return SMD_BLOCK_INVALID;
 			}
 			//else is white space or markerType
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
+			if(ch == '\n' || ch == '\u001C') {
 				markers.addStopMarker(markerType == '=' ? STATE_HORIZONTAL_D : markerType == '_' ? STATE_HORIZONTAL_U : STATE_HORIZONTAL, pos);
 				return SMD_BLOCK_END;
 			}
@@ -110,6 +109,11 @@ public class SMDHorizontalBlockParser implements SMDParser {
 		return SMD_VOID;
 	}
 
+	@Override
+	public void endBlock(int position) {
+		//do nothing
+	}
+	
 	@Override
 	public int compact(int position) {
 		if(this.internalMarkers) {

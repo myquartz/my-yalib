@@ -58,6 +58,12 @@ public class HtmlEscapeUtil {
             	if(safeQuote)
             		return "&nbsp;&nbsp;&nbsp;&nbsp;"; //replace with space
             	return "\t";
+            	
+            case '\u2028'://Line Separator
+            	return "&#8232;";
+            case '\u2029'://Paragraph Separator
+            case '\u001C'://File Separator
+            	return "";
             default:
             	if(Character.isISOControl(input))
             		return "&#xFFFD;";

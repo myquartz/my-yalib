@@ -65,7 +65,7 @@ public class SMDHeadingByPoundsBlockParser implements SMDParser {
 		
 		int startMarker = 0;
 		buff.mark();
-		int chType;
+		
 		int pos = startMarker = buff.position();
 		char ch = buff.get();
 		pos++;
@@ -80,7 +80,7 @@ public class SMDHeadingByPoundsBlockParser implements SMDParser {
 		
 		while(buff.hasRemaining()) {
 			ch = buff.get();
-			chType = Character.getType(ch);
+			
 			pos++;
 			if(ch == '#')
 				level++;
@@ -101,13 +101,13 @@ public class SMDHeadingByPoundsBlockParser implements SMDParser {
 		
 		while(buff.hasRemaining()) {
 			ch = buff.get();
-			chType = Character.getType(ch);
+			
 			pos++;
 			if(startPos < 0 && ch == ' ') {
 				continue;
 			}
 			else if(startPos < 0) {
-				if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
+				if(ch == '\n' || ch == '\u001C') {
 					markers.rollbackLastMarkerContentStart(STATE_HEADING_1 + level - 1);
 					buff.reset();
 					return SMD_BLOCK_INVALID;
@@ -133,13 +133,13 @@ public class SMDHeadingByPoundsBlockParser implements SMDParser {
 			if(pos > startPos && ch != '#' && !Character.isWhitespace(ch)) //letter, digits...
 				endPos = pos;
 			//end of line
-			else if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
+			else if(ch == '\n' || ch == '\u001C') {
 				if(endPos < 0) { //invalid
 					markers.rollbackLastMarkerContentStart(STATE_HEADING_1 + level - 1);
 					buff.reset();
 					return SMD_BLOCK_INVALID;
 				}
-				markers.addStopMarkerContent(STATE_HEADING_1 + level - 1, endPos, pos);
+				markers.addStopContentMarker(STATE_HEADING_1 + level - 1, endPos, pos);
 				return SMD_BLOCK_END;
 			}
 		}
@@ -149,6 +149,11 @@ public class SMDHeadingByPoundsBlockParser implements SMDParser {
 		return SMD_VOID;
 	}
 
+	@Override
+	public void endBlock(int position) {
+		//do nothing
+	}
+	
 	@Override
 	public int compact(int position) {
 		if(this.internalMarkers) {

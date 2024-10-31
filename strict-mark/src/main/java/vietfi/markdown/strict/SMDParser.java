@@ -104,8 +104,8 @@ public interface SMDParser {
 	 * This method to parse next block in buff, and return to caller for the next circle. This instance is state-full machine, it must be called consecutively in a stream. The buffer.position moves
 	 * to character after the end final markers (it often is the new line). 
 	 * 
-	 * 1. SMD_VOID: void block or inapplicable block or empty buffer.
-	 * 2. SMD_BLOCK_GETS_EMPTY_LINE: empty lines, the caller will move to next block. 
+	 * 1. SMD_VOID: undetermined block or empty buffer.
+	 * 2. SMD_BLOCK_GETS_EMPTY_LINE: empty lines, the caller can move to next block. 
 	 * 2. SMD_BLOCK_END:  parse block successfully ending. The produceHtml will write a complete output - with the ending marker.
 	 * 3. SMD_BLOCK_CONTINUE: parse successfully and the block should be continued by next call. The produceHtml will write incomplete output (but next call until SMD_BLOCK_END).
 	 * 4. SMD_BLOCK_INVALID: the block ending marker or inside format is invalid.
@@ -114,6 +114,13 @@ public interface SMDParser {
 	 * @return the result of parse.
 	 */
 	public int parseNext(CharBuffer buff);
+	
+	/**
+	 * end the block, if it is opening. 
+	 * 
+	 * @param position the end position (exclusive)
+	 */
+	public void endBlock(int position);
 	
 	/**
 	 * compacting the buffer position to zero.

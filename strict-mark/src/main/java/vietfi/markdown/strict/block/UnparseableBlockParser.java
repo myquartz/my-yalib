@@ -40,26 +40,26 @@ public class UnparseableBlockParser implements SMDParser {
 		
 		buff.mark();
 		char ch = '\0';
-		int chType;
+		
 		int pos = buff.position();
 		int startPos = pos;
 		markers.addStartMarkerContent(STATE_UNPARSABLE, pos, pos);
 		
 		if(buff.hasRemaining()) {
 			ch = buff.get();
-			chType = Character.getType(ch);
+			
 			pos++;
 			
-			if(startPos+1 == pos && ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
+			if(startPos+1 == pos && ch == '\n' || ch == '\u001C') {
 				return SMD_BLOCK_GETS_EMPTY_LINE;
 			}
 			
 			while(buff.hasRemaining()) {
 				ch = buff.get();
-				chType = Character.getType(ch);
+				
 				pos++;
-				if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
-					markers.addStopMarkerContent(STATE_UNPARSABLE, pos, pos);
+				if(ch == '\n' || ch == '\u001C') {
+					markers.addStopContentMarker(STATE_UNPARSABLE, pos, pos);
 					return SMD_BLOCK_END; //ending
 				}
 			}
@@ -72,6 +72,11 @@ public class UnparseableBlockParser implements SMDParser {
 		return SMD_VOID;
 	}
 
+	@Override
+	public void endBlock(int position) {
+		markers.addStopContentMarker(STATE_UNPARSABLE, position, position);
+	}
+	
 	@Override
 	public int compact(int position) {
 		int r = 1;

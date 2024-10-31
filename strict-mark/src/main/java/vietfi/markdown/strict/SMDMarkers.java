@@ -89,6 +89,10 @@ public class SMDMarkers {
     	markers[0] = 0; //only 1 first are ok
     }
     
+    public void setMarkerFulfill(int index) {
+    	fulfillIndex = index;
+    }
+    
     /**
      * The length of added markers
      * @return
@@ -190,7 +194,7 @@ public class SMDMarkers {
     	}    		
     }
 	
-	public void addStopMarkerContent(int currentState, int contentEnd, int markerEnd) {
+	public void addStopContentMarker(int currentState, int contentEnd, int markerEnd) {
 		if(contentEnd < markerEnd) {
 	    	markers[fulfillIndex++] = CONTENT_STOP | currentState <<20 | contentEnd;
 	        markers[fulfillIndex++] = MARKER_STOP | currentState <<20 | markerEnd;
@@ -372,8 +376,12 @@ public class SMDMarkers {
 		return this.cursor < this.fulfillIndex;
 	}
 	
+	public void cursorReset(int cursor) {
+		this.cursor = cursor;
+	}
+	
 	public void cursorReset() {
-		this.cursor = 0;
+		cursorReset(0);
 	}
 	
 	public boolean cursorIsCompactable(int shiftRemaining) {

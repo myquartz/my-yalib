@@ -30,7 +30,7 @@ public class SMDCodeByMarkerBlockParserTest {
 	@Test
 	void test0() {
 	    String inputText = "Simple text without formatting.\n" +
-	            "~~~ lang";
+	            "~~~ lang\n\n"+'\u001C';
 	    System.out.println("----test0-----\n" + inputText + "\n----------");
 	    
 	    CharBuffer input = CharBuffer.wrap(inputText);
@@ -44,8 +44,7 @@ public class SMDCodeByMarkerBlockParserTest {
 	    while(input.hasRemaining() && input.get() != '\n');
 	    
 	    r = parser.parseNext(input);
-	    assertEquals(SMDParser.SMD_VOID, r);
-	    assertEquals(0, markers.markedLength());
+	    assertEquals(SMDParser.SMD_BLOCK_END, r);
 	}
 	
 	@Test

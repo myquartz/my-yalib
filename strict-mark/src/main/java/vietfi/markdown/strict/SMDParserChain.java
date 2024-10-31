@@ -171,13 +171,14 @@ public class SMDParserChain implements SMDParser {
 	public int parseNext(CharBuffer buff) {
 		if(!buff.hasRemaining())
 			return SMD_VOID;
+		int ret = -1;
 		
 		while(buff.hasRemaining()) {
-			int ret = -1;
 			if(current != null) {//try to parsing
 				ret = current.parseNext(buff);
-				if(ret == SMD_VOID || ret == SMD_BLOCK_CONTINUE)
-					return ret;
+				if(ret == SMD_BLOCK_CONTINUE) {
+					return SMD_BLOCK_CONTINUE;
+				}
 				if(ret == SMD_BLOCK_END || ret == SMD_BLOCK_GETS_EMPTY_LINE) {
 					current = null;
 					continue;
@@ -188,8 +189,10 @@ public class SMDParserChain implements SMDParser {
 			//invalid, try another in order.
 			for(SMDParser p : parsers) {
 				ret = p.parseNext(buff);
-				if(ret == SMD_VOID)
-					return SMD_VOID;
+				if(ret == SMD_VOID) {//no new line at end
+					if(p == parsers[parsers.length-1])
+						return SMD_VOID;
+				}
 				if(ret == SMD_BLOCK_GETS_EMPTY_LINE || ret == SMD_BLOCK_END || ret == SMD_BLOCK_CONTINUE) {
 					if(ret == SMD_BLOCK_CONTINUE) {
 						current = p;
@@ -201,10 +204,19 @@ public class SMDParserChain implements SMDParser {
 				//else try next INVALID
 			}
 		}
-		
-		return SMD_BLOCK_CONTINUE;
+		if(ret < 0)
+			ret = SMD_VOID;
+		return ret;
 	}
 
+	@Override
+	public void endBlock(int position) {
+		if(current != null) {//try to end the current
+			current.endBlock(position);
+			current = null;
+		}
+	}
+	
 	/**
 	 * Compact the markers along with buffer compacting
 	 */

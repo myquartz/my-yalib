@@ -67,7 +67,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 				
 				parser.markers().addStartMarker(STATE_LIST_ITEM, startPos);
 
-				SMDListItemParser.consumeUtilCatchSpace(buffer);
+				SMDLineParser.consumeUtilCatchSpace(buffer);
 					
 				int r = parser.parseLine(buffer);
 				if(r == SMDLineParser.SMD_LINE_PARSED || r == SMDLineParser.SMD_LINE_PARSED_END) {
@@ -92,33 +92,33 @@ public class SMDOrderedListBlockParser implements SMDParser {
 				}
 			}
 			else {
-				boolean blankLine = SMDListItemParser.detectBlankLine(buffer);
+				boolean blankLine = SMDLineParser.detectBlankLine(buffer);
 				if(itemCount == 0) {
 					if(blankLine) {
-						SMDListItemParser.consumeBlankLine(buffer);
+						SMDLineParser.consumeBlankLine(buffer);
 						return SMD_BLOCK_GETS_EMPTY_LINE;
 					}
 					return SMD_BLOCK_INVALID;
 				}
 				else { //l <= 0 and in the list
-					int sp = SMDListItemParser.lookForwardTabOrSpaces(buffer, 3, 1);
+					int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, 3, 1);
 					
 					if(sp >= 2) { //a tab or more than 2 or 3 spaces, depending on parser
 						if(!blankLine)
 							parser.markers().addStartMarker(STATE_LIST_INDENT, startPos);
 						//next 2 chars or 1 tab
 						char ch = ' ';
-						int chType;
+						
 						int pos = startPos;
 						
 						while(sp >= 0) {
 							ch = buffer.get();
-							chType = Character.getType(ch);
+							
 							pos++;
 							if(ch == '\t') {//a tab, don't care space any more
 								break;
 							}
-							if((ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR)) {
+							if((ch == '\n' || ch == '\u001C')) {
 								break;
 							}
 							sp--;
@@ -149,7 +149,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 					else {
 						parser.endLine(buffer.position());
 						if(blankLine)
-							SMDListItemParser.consumeBlankLine(buffer);
+							SMDLineParser.consumeBlankLine(buffer);
 						//not a list anymore
 						parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
 						parser.markers().addStopMarker(STATE_ORDERED_LIST, buffer.position());
@@ -164,6 +164,16 @@ public class SMDOrderedListBlockParser implements SMDParser {
 		return SMD_BLOCK_CONTINUE;
 	}
 
+	@Override
+	public void endBlock(int position) {
+		if(itemCount > 0) { //end the last LI
+			parser.endLine(position);
+			parser.reset();
+			parser.markers().addStopMarker(STATE_LIST_ITEM, position);
+			parser.markers().addStopMarker(STATE_ORDERED_LIST, position);
+			ending = true;
+		}
+	}
 	
 	@Override
 	public int compact(int position) {

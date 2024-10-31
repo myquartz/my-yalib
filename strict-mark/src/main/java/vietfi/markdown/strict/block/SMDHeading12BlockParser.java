@@ -65,7 +65,7 @@ public class SMDHeading12BlockParser implements SMDParser {
 		
 		//finding style 1 or style 2
 		buff.mark();
-		int chType;
+		
 		
 		int pos = buff.position();
 		startPos = pos; //including the first char
@@ -82,7 +82,7 @@ public class SMDHeading12BlockParser implements SMDParser {
 		
 		while(buff.hasRemaining()) {
 			ch = buff.get();
-			chType = Character.getType(ch);
+			
 			pos++;
 			if(endPos > 0) { //wait for marker Type
 				if(markerType == '\0' && (ch == '-' || ch == '='))
@@ -96,12 +96,12 @@ public class SMDHeading12BlockParser implements SMDParser {
 				}
 			}
 			
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
-				if(endPos < 0)
+			if(ch == '\n' || ch == '\u001C') {
+				if(ch == '\n' && endPos < 0)
 					endPos = pos-1;
 				else if(markerType == '-' || markerType == '=') {
 					markers.addStartMarkerContent(markerType == '=' ? STATE_HEADING_1 : STATE_HEADING_2, startPos, startPos);
-					markers.addStopMarkerContent(markerType == '=' ? STATE_HEADING_1 : STATE_HEADING_2, endPos, pos);
+					markers.addStopContentMarker(markerType == '=' ? STATE_HEADING_1 : STATE_HEADING_2, endPos, pos);
 					markerType = '\0';
 					return SMD_BLOCK_END;
 				}
@@ -120,6 +120,11 @@ public class SMDHeading12BlockParser implements SMDParser {
 		return SMD_BLOCK_CONTINUE;	
 	}
 
+	@Override
+	public void endBlock(int position) {
+		//do nothing
+	}
+	
 	@Override
 	public int compact(int position) {
 		if(this.internalMarkers) {

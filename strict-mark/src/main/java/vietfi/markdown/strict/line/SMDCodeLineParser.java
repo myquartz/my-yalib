@@ -77,9 +77,8 @@ public class SMDCodeLineParser extends SMDLineParser {
 		buffer.mark();
 		int pos = buffer.position();
 		ch = buffer.get();
-		int chType = Character.getType(ch);
 		int r = 0;
-		if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {//consumed
+		if(ch == '\n' || ch == '\u001C') {//consumed
 			r = SMD_LINE_BLANK_OR_EMPTY;
 		}
 		
@@ -119,11 +118,11 @@ public class SMDCodeLineParser extends SMDLineParser {
 		//read next char bypass the space
 		while((ch == ' ' || ch == '\t') && buffer.hasRemaining()) {
 			ch = buffer.get();
-			chType = Character.getType(ch);
+			
 			if(doCopy)
 				this.inputChars[pos] = ch;
 			pos++;
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {//new line, meaning empty line code
+			if(ch == '\n' || ch == '\u001C') {//new line, meaning empty line code
 				markers.addStopContent(STATE_CODE_INDENT_BLOCK, pos);
 				codeLines++;
 				return SMD_LINE_PARSED;
@@ -133,11 +132,11 @@ public class SMDCodeLineParser extends SMDLineParser {
 		//parseLine will read until the end of line, if not, then void
 		while(buffer.hasRemaining()) {
 			ch = buffer.get();
-			chType = Character.getType(ch);
+			
 			if(doCopy)
 				this.inputChars[pos] = ch;
 			pos++;
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {//new line, meaning empty line code
+			if(ch == '\n' || ch == '\u001C') {//new line, meaning empty line code
 				//include the new line
 				markers.addStopContent(STATE_CODE_INDENT_BLOCK, pos);
 				codeLines++;

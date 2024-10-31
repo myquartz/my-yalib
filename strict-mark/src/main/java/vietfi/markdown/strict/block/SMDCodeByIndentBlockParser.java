@@ -81,6 +81,11 @@ public class SMDCodeByIndentBlockParser implements SMDParser {
 	}
 
 	@Override
+	public void endBlock(int position) {
+		parser.endLine(position);
+	}
+
+	@Override
 	public int compact(int position) {
 		return parser.compact(position);
 	}

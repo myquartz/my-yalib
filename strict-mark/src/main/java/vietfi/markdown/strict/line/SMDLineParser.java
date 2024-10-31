@@ -101,4 +101,110 @@ public abstract class SMDLineParser implements SMDParser {
 	 */
 	public abstract void endLine(int position);
 	
+	/**
+	 * Cascade the call to endLine.
+	 * 
+	 * @param position the ending position (exclusive).
+	 */
+	@Override
+	public void endBlock(int position) {
+		endLine(position);
+	}
+
+	/**
+	 * detect whether is it a blank line?
+	 * 
+	 * @param buffer
+	 * @return
+	 */
+	public static boolean detectBlankLine(CharBuffer buffer) {
+		if(!buffer.hasRemaining())
+			throw new IllegalArgumentException();
+		
+		int pos = buffer.position();
+		
+		for(int i = 0; buffer.remaining() > i; i++) {
+			char ch = buffer.get(pos + i);
+			
+			if(!Character.isWhitespace(ch))
+				break;
+			
+			if(ch == '\n' || ch == '\u001C') {
+				//got a new line, invalid of the lookup.
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Consume the buffer which position starts of a blank line until it gets the new line. 
+	 * 
+	 * @param buffer the input buffer.
+	 */
+	public static void consumeBlankLine(CharBuffer buffer) {
+		char ch = buffer.get(); //consume until the new line.
+		
+		while(buffer.hasRemaining() 
+				&& !(ch == '\n' || ch == '\u001C')) {
+			if(!Character.isWhitespace(ch))
+				throw new IllegalArgumentException("Not a blank line of char '"+ch+"' at "+buffer.position());
+			ch = buffer.get(); //consume until the new line.
+			
+		}
+		assert ch == '\n' || ch == '\u001C';
+	}
+
+	/**
+	 * Consume the buffer until it gets a space or tab. 
+	 * 
+	 * @param buffer the input buffer.
+	 */
+	public static void consumeUtilCatchSpace(CharBuffer buffer) {
+		char ch = buffer.get(); //consume until the space
+		while(buffer.hasRemaining() 
+				&& !(ch == ' ' || ch == '\t')) {
+			ch = buffer.get(); //consume until the new line.
+		}
+		assert ch == ' ' || ch == '\t';
+	}
+
+	/**
+	 * 
+	 * Look forward of spaces, one tab = 4 spaces.
+	 * 
+	 * @param buffer
+	 * @param spaceStop number of space exceeds to stop (inclusive)
+	 * @param tabStop number of tab exceeds to stop (inclusive)
+	 * @return number of space + tab x 4.
+	 */
+	public static int lookForwardTabOrSpaces(CharBuffer buffer, int spaceStop, int tabStop) {
+		if(!buffer.hasRemaining())
+			throw new IllegalArgumentException();
+		
+		int sp = 0; //spaces
+		int tab = 0; //tabs
+		
+		int pos = buffer.position();
+		
+		for(int i = 0; sp < spaceStop && tab < tabStop && buffer.remaining() > i; i++) {//read multiple of spaces
+			char ch = buffer.get(pos + i);
+			
+			if(!Character.isWhitespace(ch))
+				break;
+			if(ch == '\t')
+				tab++;
+			else if(ch == ' ')
+				sp++;
+			
+			if(ch == '\n' || ch == '\u001C') {
+				//got a new line, invalid of the lookup.
+				break;
+			}
+		}
+		
+		return sp + tab * 4;
+	}
+	
 }

@@ -69,24 +69,25 @@ public class SMDQuoteLineParser extends SMDLineParser {
 			return SMD_LINE_VOID;
 		}
 		else if(first == '\n' || first != '>' || first == '>' && !Character.isWhitespace(next)) {//consumed
+	
+			if(paraLines == 0) {
+				markers.rollbackLastMarkerContentStart(STATE_QUOTE_PARAGRAPH);
+			}
+			else
+				markers.addStopMarker(STATE_QUOTE_PARAGRAPH, first != '\n' ? startPos : startPos+1);
+			if(quoteLines == 0) {
+				markers.rollbackLastMarkerContentStart(STATE_QUOTE_BLOCK);
+			}
+			else {
+				markers.addStopMarker(STATE_QUOTE_BLOCK, first != '\n' ? startPos : startPos+1);
+				ending = true;
+			}
+		
 			if(first != '\n') { //invalid quote block, not a quote start, or a quote but not follow a space/tab
-				if(paraLines > 0)
-					markers.addStopMarker(STATE_QUOTE_PARAGRAPH, startPos);
-				if(quoteLines > 0) {
-					markers.addStopMarker(STATE_QUOTE_BLOCK, startPos);
-					ending = true;
-				}
 				buffer.reset();
 				return SMD_LINE_INVALID;
 			}
-			else {
-				if(paraLines > 0) //empty line is end of last paragraph
-					markers.addStopMarker(STATE_QUOTE_PARAGRAPH, startPos+1);
-				if(quoteLines > 0) {
-					markers.addStopMarker(STATE_QUOTE_BLOCK, startPos+1);
-					ending = true;
-				}
-			}
+			
 			return SMD_LINE_BLANK_OR_EMPTY;
 		}
 		
@@ -149,13 +150,13 @@ public class SMDQuoteLineParser extends SMDLineParser {
 				markers.addStartContent(STATE_UNPARSABLE, pos);
 				
 				char ch;
-				int chType;
+				
 				
 				while(buffer.hasRemaining()) {
 					ch = buffer.get();
-					chType = Character.getType(ch);
+					
 					pos++;
-					if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
+					if(ch == '\n' || ch == '\u001C') {
 						markers.addStopContent(STATE_UNPARSABLE, pos);
 						return SMD_LINE_PARSED; //ending
 					}

@@ -88,6 +88,11 @@ public class SMDQuoteBlockParser implements SMDParser {
 		
 		return SMD_BLOCK_CONTINUE;
 	}
+	
+	@Override
+	public void endBlock(int position) {
+		parser.endBlock(position);
+	}
 
 	@Override
 	public int compact(int position) {

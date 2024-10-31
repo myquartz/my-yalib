@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Renderer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+	<style>
+		#markdown-output blockquote {
+			border-left: groove medium;
+			margin-left: 1rem;
+			padding-left: 0.5rem;
+		}
+		#markdown-output pre > code {
+			background-color: lightyellow;
+		}
+		#markdown-output li > p {
+			margin: 0.5rem 0 0;
+		}
+	</style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Markdown Renderer</h1>
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h4>Markdown Input</h4>
+                <textarea id="markdown-input" class="form-control font-monospace" rows="18" placeholder="Enter Markdown text here..."></textarea>
+            </div>
+            <div class="col-md-6">
+                <h4>Rendered Output</h4>
+                <div id="markdown-output" class="border p-3" style="min-height: 300px;"></div>
+            </div>
+        </div>
+		<pre id="markdown-debug" class="mt-4 font-monospace">
+		</pre>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        // JavaScript to handle input and output rendering
+        $(document).ready(function() {
+            $('#markdown-input').on('input', function() {
+                const markdownText = $(this).val();
+				if(markdownText && !window.processing) {
+					window.processing = true;
+	                $.ajax({
+	                    type: 'POST',
+	                    url: '/api/markdown-render',
+	                    data: { markdown_input: markdownText },
+	                    success: function(response) {
+							window.processing = false;
+	                        $('#markdown-output').html(response.htmlContent);
+							$('#markdown-debug').text(
+								(response.markdownContent??"").replaceAll('\n','\\n')
+								+"\n\n"+(response.htmlContent??"").replaceAll('\n','\\n')
+								+"\n\n"+response.debugContent);
+	                    },
+	                    error: function(e) {
+							window.processing = false;
+	                        $('#markdown-output').html('<p class="text-danger">Error rendering markdown: HTTP '+e.status+'</p><pre>'+JSON.stringify(e.responseJSON??e.responseText,null,2)+'</pre>');
+	                    }
+	                });
+				}
+				else if(!window.processing)
+					$('#markdown-output').text('');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -59,7 +59,7 @@ public class SMDParagraphParser implements SMDParser {
 			else if(r == SMDLineParser.SMD_LINE_BLANK_OR_EMPTY || r == SMDLineParser.SMD_LINE_INVALID) {
 				if(pLines > 0) {
 					ending = true;
-					lineParser.markers().addStopMarker(STATE_PARAGRAPH, buff.position());
+					lineParser.markers().addStopMarker(STATE_PARAGRAPH, buff.position()-1);
 					return SMD_BLOCK_END;
 				}
 				else
@@ -77,6 +77,15 @@ public class SMDParagraphParser implements SMDParser {
 		return SMD_BLOCK_CONTINUE;
 	}
 
+	@Override
+	public void endBlock(int position) {
+		if(pLines > 0) { //end the paragraph
+			lineParser.endLine(position);
+			lineParser.markers().addStopMarker(STATE_PARAGRAPH, position);
+			ending = true;
+		}
+	}
+	
 	@Override
 	public int compact(int position) {
 		return lineParser.compact(position);

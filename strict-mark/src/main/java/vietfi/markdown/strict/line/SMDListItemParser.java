@@ -138,8 +138,6 @@ public class SMDListItemParser extends SMDLineParser {
 				markers.addStopMarker(STATE_ORDERED_LIST, position);
 			else if(currParser == PARSE_UNORDERED_LIST)
 				markers.addStopMarker(STATE_UNORDERED_LIST, position);
-			subListItemType = '\0'; 
-			subItemLines = 0; //sub item line counting
 			break;
 		}
 		
@@ -152,6 +150,7 @@ public class SMDListItemParser extends SMDLineParser {
 		currParser = PARSE_UNKNOWN;
 		itemLines = 0;
 		subItemLines = 0;
+		subListItemType = '\0';
 		inSubParagraph = false;
 	}
 	
@@ -174,10 +173,9 @@ public class SMDListItemParser extends SMDLineParser {
 			//the first line is always paragraph
 			buffer.mark();
 			char ch = buffer.get();
-			int chType = Character.getType(ch);
 			
 			//ch must not new line
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
+			if(ch == '\n' || ch == '\u001C') {
 				buffer.reset();
 				return SMD_LINE_INVALID;
 			}
@@ -193,7 +191,7 @@ public class SMDListItemParser extends SMDLineParser {
 					break;
 				}
 			}
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
+			if(ch == '\n' || ch == '\u001C') {
 				//catch spaces only, that is invalid
 				if(level > 0)
 					markers.rollbackLastMarkerContentStart(STATE_LIST_ITEM);
@@ -218,8 +216,8 @@ public class SMDListItemParser extends SMDLineParser {
 		//second or later line
 		int r = -1;
 		//counting number of spaces
-		int sp = lookForwardTabOrSpaces(buffer, 4, 1);
-		boolean blankLine = detectBlankLine(buffer);
+		int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, 4, 1);
+		boolean blankLine = SMDLineParser.detectBlankLine(buffer);
 		
 		//continue parsing as the last, the indent spaces has been passed
 		switch(currParser) {
@@ -279,16 +277,16 @@ public class SMDListItemParser extends SMDLineParser {
 				markers.addStartMarker(STATE_LIST_INDENT, pos);
 				//next 2 chars or 1 tab
 				char ch = ' ';
-				int chType;
+				
 				
 				while(spc >= 0) {
 					ch = buffer.get();
-					chType = Character.getType(ch);
+					
 					pos++;
 					if(ch == '\t') {//a tab, don't care space any more
 						break;
 					}
-					if((ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR)) {
+					if((ch == '\n' || ch == '\u001C')) {
 						break;
 					}
 					spc--;
@@ -334,7 +332,7 @@ public class SMDListItemParser extends SMDLineParser {
 					//next 2 chars
 					buffer.get(); buffer.get();
 					if(currParser == PARSE_ORDERED_LIST)
-						consumeUtilCatchSpace(buffer);
+						SMDLineParser.consumeUtilCatchSpace(buffer);
 					r = listParser.parseLine(buffer);
 					if(r == SMD_LINE_PARSED || r == SMD_LINE_PARSED_END) {
 						if(r == SMD_LINE_PARSED_END) {
@@ -365,7 +363,7 @@ public class SMDListItemParser extends SMDLineParser {
 					markers.addStopMarker(STATE_LIST_ITEM, pos);
 					if(blankLine) {
 						//consume the line ending
-						consumeBlankLine(buffer);
+						SMDLineParser.consumeBlankLine(buffer);
 						pos = buffer.position();
 					}
 					if(currParser == PARSE_ORDERED_LIST)
@@ -397,12 +395,11 @@ public class SMDListItemParser extends SMDLineParser {
 		
 		if((r == SMD_LINE_INVALID || r == -1) && blankLine) { //consume the blank line
 			char ch = buffer.get(); //consume until the new line.
-			int chType = Character.getType(ch);
 			pos++;
 			while(buffer.hasRemaining() 
-					&& !(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR)) {
+					&& !(ch == '\n' || ch == '\u001C')) {
 				ch = buffer.get(); //consume until the new line.
-				chType = Character.getType(ch);
+				
 			}
 			if(blankLine)
 				inSubParagraph = true;
@@ -410,7 +407,7 @@ public class SMDListItemParser extends SMDLineParser {
 		}
 		
 		if(r == SMD_LINE_VOID || sp < 6 && buffer.remaining() < 6
-				&& !detectBlankLine(buffer)) { //can not determine the complete line
+				&& !SMDLineParser.detectBlankLine(buffer)) { //can not determine the complete line
 			return SMD_LINE_VOID;
 		}
 		
@@ -424,7 +421,7 @@ public class SMDListItemParser extends SMDLineParser {
 				if(l < 0) {
 					if(blankLine) {
 						//consume the line ending
-						consumeBlankLine(buffer);
+						SMDLineParser.consumeBlankLine(buffer);
 					}
 					return blankLine ? SMD_LINE_BLANK_OR_EMPTY : SMD_LINE_VOID;
 				}
@@ -433,6 +430,8 @@ public class SMDListItemParser extends SMDLineParser {
 					markers.addStartMarker(STATE_UNORDERED_LIST, pos);
 					//next 2 chars
 					buffer.get(); buffer.get();
+					//start of new list item.
+					listParser.reset();
 					r = listParser.parseLine(buffer);
 					if(r == SMD_LINE_PARSED) {
 						itemLines++;
@@ -452,7 +451,7 @@ public class SMDListItemParser extends SMDLineParser {
 				if(l < 0) {
 					if(blankLine) {
 						//consume the line ending
-						consumeBlankLine(buffer);
+						SMDLineParser.consumeBlankLine(buffer);
 					}
 					return blankLine ? SMD_LINE_BLANK_OR_EMPTY : SMD_LINE_VOID;
 				}
@@ -460,7 +459,9 @@ public class SMDListItemParser extends SMDLineParser {
 					this.subListItemType = buffer.get(pos);
 					markers.addStartMarker(STATE_ORDERED_LIST, pos);
 					//next 3 chars
-					consumeUtilCatchSpace(buffer);
+					SMDLineParser.consumeUtilCatchSpace(buffer);
+					//start of new list item.
+					listParser.reset();
 					r = listParser.parseLine(buffer);
 					if(r == SMD_LINE_PARSED) {
 						itemLines++;
@@ -537,94 +538,6 @@ public class SMDListItemParser extends SMDLineParser {
 	}
 
 	/**
-	 * detect whether is it a blank line?
-	 * 
-	 * @param buffer
-	 * @return
-	 */
-	public static boolean detectBlankLine(CharBuffer buffer) {
-		if(!buffer.hasRemaining())
-			throw new IllegalArgumentException();
-		
-		int pos = buffer.position();
-		
-		for(int i = 0; buffer.remaining() > i; i++) {
-			char ch = buffer.get(pos + i);
-			int chType = Character.getType(ch);
-			
-			if(!Character.isWhitespace(ch))
-				break;
-			
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
-				//got a new line, invalid of the lookup.
-				return true;
-			}
-		}
-		
-		return false;
-	}
-	
-	public static void consumeBlankLine(CharBuffer buffer) {
-		char ch = buffer.get(); //consume until the new line.
-		int chType = Character.getType(ch);		
-		while(buffer.hasRemaining() 
-				&& !(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR)) {
-			if(!Character.isWhitespace(ch))
-				throw new IllegalArgumentException("Not a blank line of char '"+ch+"' at "+buffer.position());
-			ch = buffer.get(); //consume until the new line.
-			chType = Character.getType(ch);
-		}
-		assert ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR;
-	}
-	
-	public static void consumeUtilCatchSpace(CharBuffer buffer) {
-		char ch = buffer.get(); //consume until the space
-		while(buffer.hasRemaining() 
-				&& !(ch == ' ' || ch == '\t')) {
-			ch = buffer.get(); //consume until the new line.
-		}
-		assert ch == ' ' || ch == '\t';
-	}
- 
-	/**
-	 * 
-	 * Look forward of spaces, one tab = 4 spaces.
-	 * 
-	 * @param buffer
-	 * @param spaceStop number of space exceeds to stop (inclusive)
-	 * @param tabStop number of tab exceeds to stop (inclusive)
-	 * @return number of space + tab x 4.
-	 */
-	public static int lookForwardTabOrSpaces(CharBuffer buffer, int spaceStop, int tabStop) {
-		if(!buffer.hasRemaining())
-			throw new IllegalArgumentException();
-		
-		int sp = 0; //spaces
-		int tab = 0; //tabs
-		
-		int pos = buffer.position();
-		
-		for(int i = 0; sp < spaceStop && tab < tabStop && buffer.remaining() > i; i++) {//read multiple of spaces
-			char ch = buffer.get(pos + i);
-			int chType = Character.getType(ch);
-			
-			if(!Character.isWhitespace(ch))
-				break;
-			if(ch == '\t')
-				tab++;
-			else if(ch == ' ')
-				sp++;
-			
-			if(ch == '\n' || chType == Character.LINE_SEPARATOR  || chType == Character.PARAGRAPH_SEPARATOR) {
-				//got a new line, invalid of the lookup.
-				break;
-			}
-		}
-		
-		return sp + tab * 4;
-	}
-
-	/**
 	 * Detect sub unordered list by checking 3 forward characters  
 	 * The result will be:
 	 * 
@@ -632,8 +545,8 @@ public class SMDListItemParser extends SMDLineParser {
 	 * 0: it is not an unordered list.
 	 * -1: not enough characters
 	 * 
-	 * @param buffer
-	 * @param subListItemType
+	 * @param buffer to look
+	 * @param subListItemType the type of item to look for
 	 * @return 
 	 */
 	public static byte lookForwardUnorderedList(CharBuffer buffer, char subListItemType) {
@@ -656,6 +569,18 @@ public class SMDListItemParser extends SMDLineParser {
 		return 0;
 	}
 	
+	/**
+	 * Detect sub unordered list by checking 3 to 5 forward characters  
+	 * The result will be:
+	 * 
+	 * 1: the list is possible of the first line ( 1. item 1 or a. or A. or i.) 
+	 * 0: it is not an unordered list.
+	 * -1: not enough characters
+	 * 
+	 * @param buffer to look
+	 * @param subListItemType the type of item to look for
+	 * @return 
+	 */
 	public static byte lookForwardOrderedList(CharBuffer buffer, char subListItemType) {
 		if(!buffer.hasRemaining())
 			throw new IllegalArgumentException();
@@ -741,9 +666,10 @@ public class SMDListItemParser extends SMDLineParser {
 	@Override
 	public int compact(int shiftRemaining) {
 		this.codeParser.compact(shiftRemaining);
-		this.listParser.compact(shiftRemaining);
 		this.quoteParser.compact(shiftRemaining);
 		this.textParser.compact(shiftRemaining);
+		if(listParser != null)
+			this.listParser.compact(shiftRemaining);
 		return shiftRemaining;
 	}
 

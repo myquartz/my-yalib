@@ -25,10 +25,11 @@ import vietfi.markdown.strict.render.HtmlWriterImpl;
 import vietfi.markdown.strict.render.XhtmlWriterImpl;
 
 public class SMDQuoteBlockParserTest {
+	
 	@Test
 	void test0() {
-	    String inputText = "Simple text without formatting.\n" +
-	            "Another line of plain text.\n" +
+	    String inputText = ">a\n" +
+	            "> >\n" +
 	            "Goodbye.\n";
 	    System.out.println("----test0-----\n" + inputText + "\n----------");
 	    
@@ -36,8 +37,27 @@ public class SMDQuoteBlockParserTest {
 	    SMDQuoteBlockParser parser = new SMDQuoteBlockParser();
 
 	    int r = parser.parseNext(input);
+	    
 	    assertEquals(SMDParser.SMD_BLOCK_INVALID, r);
 	    assertEquals(0, input.position());
+	    
+	    char ch = input.get(); //consume until the space
+		while(input.hasRemaining() && ch != '\n') {
+			ch = input.get(); //consume until the new line.
+		}
+		
+		r = parser.parseNext(input);
+	    
+	    assertEquals(SMDParser.SMD_BLOCK_INVALID, r);
+	    
+		ch = input.get(); //consume until the space
+		while(input.hasRemaining() && ch != '\n') {
+			ch = input.get(); //consume until the new line.
+		}
+		
+		r = parser.parseNext(input);
+	    
+	    assertEquals(SMDParser.SMD_BLOCK_INVALID, r);
 	}
 	
 	@Test
@@ -45,7 +65,8 @@ public class SMDQuoteBlockParserTest {
 		String trailer = "This not include";
 	    String inputText = "> Block quote formatting.\n" +
 	            ">  Another line of plain text.\n" +
-	            "> Goodbye.\n\n"+trailer;
+	    		">\n"+
+	            "> Goodbye.\n>\n"+trailer;
 	    System.out.println("----test1-----\n" + inputText + "\n----------");
 	    
 	    CharBuffer input = CharBuffer.wrap(inputText);
@@ -65,7 +86,7 @@ public class SMDQuoteBlockParserTest {
 	    String[] expected = {
 	    		"<blockquote><p>Block quote formatting.",
 	    		"Another line of plain text.",
-	    		"Goodbye.",
+	    		"</p><p>Goodbye.",
 	    		"</p></blockquote>"
 	    };
 	    		
