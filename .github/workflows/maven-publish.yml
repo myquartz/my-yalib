@@ -43,19 +43,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
         
-  publish-doc:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Strict Mark Deploy JavaDoc 🚀
-        uses: MathieuSoysal/Javadoc-publisher.yml@v2.5.0
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          javadoc-branch: main
-          java-version: 11
-          javadoc-source-folder: strict-mark/javadoc
-          target-folder: strict-mark/javadoc
-          project: maven
-          custom-command: javadoc -d strict-mark/javadoc -sourcepath strict-mark/src/main/java -subpackages vietfi
-
