@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.StringWriter;
 import java.nio.CharBuffer;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -345,5 +346,59 @@ public class SMDQuoteBlockParserTest {
 	    Object[] actual = sb.toString().lines().collect(Collectors.toList()).toArray();
 	    		
 	    assertArrayEquals(expected, actual);
+	}
+	
+	@Test
+	void test5() {
+		String inputText = "> Test 123\n"
+				+ ">\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDQuoteBlockParser parser = new SMDQuoteBlockParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_BLOCK_CONTINUE, r);
+	    
+	    System.out.append("Result 1:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_QUOTE_BLOCK, SMDParser.STATE_PARAGRAPH,  SMDParser.STATE_TEXT, SMDParser.STATE_TEXT, 
+	    		SMDParser.STATE_PARAGRAPH, SMDParser.STATE_QUOTE_BLOCK};
+	    
+	    assertArrayEquals(Arrays.copyOf(expectedState, expectedState.length - 1), parser.markers().toStateArray());
+	    
+	    parser.endBlock(input.position());
+	    
+	    System.out.append("Result 2:\n").append(parser.markers().toString()).append("\n");
+	    
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    		
+	}
+	
+	@Test
+	void test6() {
+		String inputText = "> Test 123\n"
+				+ "> a\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDQuoteBlockParser parser = new SMDQuoteBlockParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_BLOCK_CONTINUE, r);
+	    
+	    System.out.append("Result 1:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_QUOTE_BLOCK, SMDParser.STATE_PARAGRAPH,  SMDParser.STATE_TEXT, SMDParser.STATE_TEXT,
+	    		SMDParser.STATE_TEXT, SMDParser.STATE_TEXT, SMDParser.STATE_PARAGRAPH, SMDParser.STATE_QUOTE_BLOCK};
+	    
+	    assertArrayEquals(Arrays.copyOf(expectedState, expectedState.length - 2), parser.markers().toStateArray());
+	    
+	    parser.endBlock(input.position());
+	    
+	    System.out.append("Result 2:\n").append(parser.markers().toString()).append("\n");
+	    
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    		
 	}
 }

@@ -92,9 +92,13 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			outputBuffer.append(BLOCKQUOTE_BEGIN);
 	        			break;
-	        		case SMDParser.STATE_QUOTE_PARAGRAPH:
+	        		
 	        		case SMDParser.STATE_PARAGRAPH:
 	    				outputBuffer.append(PARA_BEGIN);
+	    				break;
+	    				
+	        		case SMDParser.STATE_NEW_LINE:
+	        			outputBuffer.append(TAG_NEW_LINE);
 	    				break;
 	    				
 	        		case SMDParser.STATE_ORDERED_LIST:
@@ -163,7 +167,7 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			outputBuffer.append(BLOCKQUOTE_END);
 	        			break;
-	        		case SMDParser.STATE_QUOTE_PARAGRAPH:
+	        		
 	        		case SMDParser.STATE_PARAGRAPH:
 	    				outputBuffer.append(PARA_END);
 	    				break;

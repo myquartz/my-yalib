@@ -34,15 +34,16 @@ public interface SMDParser {
     public static final int STATE_URL = 9;
     public static final int STATE_IMAGE = 10;
     public static final int STATE_IMAGE_SRC = 11;
+    public static final int STATE_NEW_LINE = 12;
     
     //of code
-    public static final int STATE_CODE_INDENT_BLOCK = 12;
-    public static final int STATE_CODE_BLOCK = 13;
-    public static final int STATE_CODE_LANGUAGE = 14;
+    public static final int STATE_CODE_INDENT_BLOCK = 13;
+    public static final int STATE_CODE_BLOCK = 14;
+    public static final int STATE_CODE_LANGUAGE = 15;
     
     //of quote
-    public static final int STATE_QUOTE_BLOCK = 15;
-    public static final int STATE_QUOTE_PARAGRAPH = 16;
+    public static final int STATE_QUOTE_BLOCK = 16;
+    //public static final int STATE_QUOTE_PARAGRAPH = 17;
     
     //of list items with sub item
     public static final int STATE_ORDERED_LIST = 20;

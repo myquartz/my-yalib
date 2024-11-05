@@ -76,11 +76,27 @@ public class SMDMarkers {
     }
 
     /**
-     * The current markers
-     * @return
+     * The current marker state
+     * 
+     * @return current state array (for debugging)
      */
-    public int[] markers() {
-    	return Arrays.copyOf(markers, fulfillIndex);
+    public int[] toStateArray() {
+    	int[] result = new int[fulfillIndex];
+    	for(int i = 0; i < fulfillIndex; i++)
+    		result[i] = markerState(markers[i]);
+    	return result;
+    }
+    
+    /**
+     * The current marker start stop
+     * 
+     * @return current marker array (for debugging)
+     */
+    public int[] toMarkerStartStopArray() {
+    	int[] result = new int[fulfillIndex];
+    	for(int i = 0; i < fulfillIndex; i++)
+    		result[i] = markers[i] & (MARKER_START | MARKER_STOP | CONTENT_START | CONTENT_STOP);
+    	return result;
     }
     
     public void resetMarkers() {
@@ -465,9 +481,9 @@ public class SMDMarkers {
 			}
         	
         };
-        int[] only = this.markers();
-        sb.append(Arrays.stream(only).mapToObj(op).collect(Collectors.joining("\t"))).append("\n");
-        sb.append(Arrays.stream(only).mapToObj(v -> String.valueOf(v & 0x0FFFFF)).collect(Collectors.joining("\t"))).append("\n");
+        
+        sb.append(Arrays.stream(markers, 0, this.fulfillIndex).mapToObj(op).collect(Collectors.joining("\t"))).append("\n");
+        sb.append(Arrays.stream(markers, 0, this.fulfillIndex).mapToObj(v -> String.valueOf(v & 0x0FFFFF)).collect(Collectors.joining("\t"))).append("\n");
         
         return sb.toString();
     }

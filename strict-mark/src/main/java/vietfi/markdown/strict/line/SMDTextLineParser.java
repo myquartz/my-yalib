@@ -131,6 +131,9 @@ public class SMDTextLineParser extends SMDLineParser {
                 case STATE_IMAGE_SRC:
                 	change = handleImageSourceState(pos, ch, nextChar, next2Char);
                     break;
+                case STATE_NEW_LINE:
+                	change = handleNewLineState(pos, ch, nextChar, next2Char);
+                    break;
                 case STATE_UNPARSABLE:
                 	if (ch == '\n' || ch == '\u001C') {
                 		// End of paragraphText
@@ -241,6 +244,7 @@ public class SMDTextLineParser extends SMDLineParser {
     				break;
     			case STATE_IMAGE:
     			case STATE_LINK:
+    			case STATE_NEW_LINE:
     				//marker only, including the new line
     				markers.addStopMarker(state, endPosition+1);
     				break;
@@ -301,12 +305,11 @@ public class SMDTextLineParser extends SMDLineParser {
         	nextState = STATE_INLINE_CODE;
         	endPosition = position+1;
         	change = CONSUME_1_CHAR;
-        } else if (ch == '[') {	//accept white space followed
+        } else if (ch == '[' && !Character.isWhitespace(nextChar)) {	//non-white space followed
             // Check for link
     		nextState = STATE_LINK;
         	endPosition = position+1;
-        	change = CONSUME_1_CHAR;
-    	
+        	change = CONSUME_1_CHAR;    	
         } else if (ch == '!' && (nextChar == '[' || nextChar == '(')) {
             // Check for image (with or without alternative text prefix
         	if(nextChar == '[') {
@@ -320,7 +323,12 @@ public class SMDTextLineParser extends SMDLineParser {
         	endPosition = position+2;
             change = CONSUME_2_CHARS;
         }
-        
+        else if (ch == '\\' && Character.isWhitespace(nextChar)) {
+        	// Check for new line backslash
+        	nextState = STATE_NEW_LINE;
+        	change = CONSUME_1_CHAR;
+        }
+    	
     	if(change != NO_CHANGE && isChangeableTo(nextState)) {
 			//replace zero to state text
 			stack[0] = STATE_TEXT;
@@ -330,6 +338,9 @@ public class SMDTextLineParser extends SMDLineParser {
     			case STATE_URL:
     			case STATE_IMAGE_SRC:
     				markers.addStartContent(nextState, endPosition);
+    				break;
+    			case STATE_NEW_LINE:
+    				markers.addStartMarker(nextState, position);
     				break;
     			default:
     				markers.addStartMarkerContent(nextState, position, endPosition);
@@ -372,6 +383,21 @@ public class SMDTextLineParser extends SMDLineParser {
     	//full switching by changeState;
     	return changeState(position, ch, nextChar, next2Char);
     }
+    
+    private int handleNewLineState(int position, char ch, char nextChar, char next2Char) {
+    	//handle ending marker
+    	if (ch == '\n' || ch == '\u001C') {
+    		popAllStack(position); //not including new line
+        	return PARSE_BREAK;
+        }
+    	else if(!Character.isWhitespace(ch)) {
+    		//rollback
+    		markers.rollbackLastMarkerContentStart(STATE_NEW_LINE);
+    		popStack();
+    	}
+    	
+    	return NO_CHANGE;
+	}
     
     private int handleStrikeThroughState(int position, char ch, char nextChar, char next2Char) {
     	//handle ending marker

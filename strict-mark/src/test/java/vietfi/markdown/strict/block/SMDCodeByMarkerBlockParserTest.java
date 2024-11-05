@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.StringWriter;
 import java.nio.CharBuffer;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -465,7 +466,7 @@ public class SMDCodeByMarkerBlockParserTest {
 	
 	@Test
 	void xhtmlOutTest5() {
-	    String inputText = "~~~ javascript\nCode formatting.\n" +
+	    String inputText = "~~~javascript\nCode formatting.\n" +
 	            "Another line of code. Next is empty line\n" +
 	            "```\n" +
 	            "Goodbye.\n~~~\n";
@@ -508,5 +509,21 @@ public class SMDCodeByMarkerBlockParserTest {
 			fail(e.toString());
 		}
 	    
+	}
+	
+	@Test
+	void test6() {
+		String inputText = "~~~ language invalid\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDCodeByMarkerBlockParser parser = new SMDCodeByMarkerBlockParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_BLOCK_INVALID, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    assertEquals(0, parser.markers().markedLength());
+	    		
 	}
 }

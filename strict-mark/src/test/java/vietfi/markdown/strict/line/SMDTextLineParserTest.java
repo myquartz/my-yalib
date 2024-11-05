@@ -1,10 +1,12 @@
 package vietfi.markdown.strict.line;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.StringWriter;
 import java.nio.CharBuffer;
+import java.util.Arrays;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -17,6 +19,7 @@ import vietfi.markdown.strict.render.HtmlWriterImpl;
 import vietfi.markdown.strict.render.XhtmlWriterImpl;
 import vietfi.markdown.strict.SMDHtmlRender;
 import vietfi.markdown.strict.SMDHtmlWriter;
+import vietfi.markdown.strict.SMDParser;
 import vietfi.markdown.strict.SMDXhtmlWriter;
 
 public class SMDTextLineParserTest {
@@ -812,5 +815,51 @@ public class SMDTextLineParserTest {
         } catch (XMLStreamException e) {
 			fail(e.toString());
 		}
+	}
+	
+	@Test
+	void test14() {
+		String inputText = "Test\\\n"
+				+ "any\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Result 1:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_TEXT, SMDParser.STATE_NEW_LINE, SMDParser.STATE_NEW_LINE, SMDParser.STATE_TEXT,
+	    		SMDParser.STATE_TEXT, SMDParser.STATE_TEXT};
+	    
+	    assertArrayEquals(Arrays.copyOf(expectedState, expectedState.length - 2), parser.markers().toStateArray());
+	    
+	    r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    
+	    System.out.append("Result 2:\n").append(parser.markers().toString()).append("\n");
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    		
+	}
+	
+	@Test
+	void test15() {
+		String inputText = "Test\\ a char\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_TEXT, SMDParser.STATE_TEXT};
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    
 	}
 }

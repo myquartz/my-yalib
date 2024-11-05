@@ -28,6 +28,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	
 	public static final String XHTML_BLOCKQUOTE_TAG = "blockquote";
 	public static final String XHTML_PARA_TAG = "p";
+	public static final String XHTML_NEW_LINE = "br";
 	public static final String XHTML_PRE_TAG_NAME = "pre";
 	public static final String XHTML_PRE_LANGUAGUE_ATTRIBUTE = "class";
 	public static final String XHTML_PRE_LANGUAGUE_PREFIX = "language-";
@@ -43,6 +44,13 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	private final static String XHTML_HR_CLASS_ATTR = "class";
 	private final static String XHTML_UNDERSCORE_HR = "underscore-line";
 	private final static String XHTML_DOUBLE_HR = "double-line";
+	private static final String XHTML_STRIKETHROUGH = "s";
+	private static final String XHTML_BOLD = "b";
+	private static final String XHTML_ITALIC = "i";
+	private static final String XHTML_UNDERLINE = "u";
+	private static final String XHTML_CODE = "code";
+	private static final String XHTML_A_TAG = "a";
+	private static final String XHTML_IMG_TAG = "img";
 
 	private char[] myArray = null;
 	StringBuilder sb = new StringBuilder(1024);
@@ -90,25 +98,25 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         		//start marker
         		switch(state) {
 	        		case SMDParser.STATE_STRIKETHROUGH:
-	        			xmlWriter.writeStartElement("s");
+	        			xmlWriter.writeStartElement(XHTML_STRIKETHROUGH);
 	        			break;
 	        		case SMDParser.STATE_BOLD:
-	        			xmlWriter.writeStartElement("b");
+	        			xmlWriter.writeStartElement(XHTML_BOLD);
 	        			break;
 	        		case SMDParser.STATE_ITALIC:
-	        			xmlWriter.writeStartElement("i");
+	        			xmlWriter.writeStartElement(XHTML_ITALIC);
 	        			break;
 	        		case SMDParser.STATE_UNDERLINE:
-	        			xmlWriter.writeStartElement("u");
+	        			xmlWriter.writeStartElement(XHTML_UNDERLINE);
 	        			break;
 	        		case SMDParser.STATE_INLINE_CODE:
-	        			xmlWriter.writeStartElement("code");
+	        			xmlWriter.writeStartElement(XHTML_CODE);
 	        			break;
 	        		case SMDParser.STATE_LINK:
-	        			xmlWriter.writeStartElement("a");
+	        			xmlWriter.writeStartElement(XHTML_A_TAG);
 	        			break;
 	        		case SMDParser.STATE_IMAGE:
-	        			xmlWriter.writeStartElement("img");
+	        			xmlWriter.writeStartElement(XHTML_IMG_TAG);
 	        			break;
 	        		case SMDParser.STATE_CODE_BLOCK:
 	        			xmlWriter.writeStartElement(XHTML_PRE_TAG_NAME);
@@ -116,9 +124,13 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			xmlWriter.writeStartElement(XHTML_BLOCKQUOTE_TAG);
 	        			break;
-	        		case SMDParser.STATE_QUOTE_PARAGRAPH:
+	        		
 	        		case SMDParser.STATE_PARAGRAPH:
 	        			xmlWriter.writeStartElement(XHTML_PARA_TAG);
+	        			break;
+	        			
+	        		case SMDParser.STATE_NEW_LINE:
+	        			xmlWriter.writeEmptyElement(XHTML_NEW_LINE);
 	        			break;
 	        		case SMDParser.STATE_ORDERED_LIST:
 	        			xmlWriter.writeStartElement(XHTML_OL_TAG);
@@ -163,7 +175,6 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         		case SMDParser.STATE_IMAGE:
         		case SMDParser.STATE_CODE_BLOCK:
         		case SMDParser.STATE_QUOTE_BLOCK:
-        		case SMDParser.STATE_QUOTE_PARAGRAPH:
         		case SMDParser.STATE_PARAGRAPH:
         		case SMDParser.STATE_ORDERED_LIST:
         		case SMDParser.STATE_UNORDERED_LIST:

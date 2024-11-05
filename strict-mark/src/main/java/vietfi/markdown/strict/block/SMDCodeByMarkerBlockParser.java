@@ -79,12 +79,11 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 			int c = 2; //more 2
 			while(buffer.hasRemaining()) {
 				ch = buffer.get();
-				
 				npos++;
 				if((c > 0 && markerType != ch) || (c <= 0 && (ch == '\n' || ch == '\u001C'))) {
 					break;
 				}
-				if(c < 0 && !Character.isWhitespace(ch))
+				if(c <= 0 && !Character.isWhitespace(ch))
 					break;
 				c--;
 			}
@@ -105,20 +104,21 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 	    	foundBeginning = true;
 	    	markers.addStartMarker(STATE_CODE_BLOCK, startPos);
 	    	
-			if(ch != '\n') {
+			if(!Character.isWhitespace(ch)) { //including \n
 				//start language definition after the spaces trailing of ``` or ~~~
 				markers.addStartContent(STATE_CODE_LANGUAGE, npos - 1);
 				
 				boolean isNewLine = false;
 				boolean languageDone = false;
+				int langPosEnd = npos;
 				while(buffer.hasRemaining()) {
 					ch = buffer.get();
 					
 					npos++;
 					if(Character.isWhitespace(ch)) {
 						if(!languageDone) {
-							markers.addStopContent(STATE_CODE_LANGUAGE, npos - 1);
 							languageDone = true;
+							langPosEnd = npos - 1;
 						}
 						if(ch == '\n' || ch == '\u001C') {//ok, end to parser
 							isNewLine = true;
@@ -126,8 +126,9 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 						}
 						//else jump over trailing spaces
 					}
-					else if(languageDone) //invalid 
+					else if(languageDone) { //invalid 
 						break;
+					}
 				}
 				
 				if(!isNewLine || ch == '\u001C') {
@@ -137,11 +138,12 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 					markers.rollbackLastContentStart(STATE_CODE_LANGUAGE);
 					markers.rollbackLastMarkerContentStart(STATE_CODE_BLOCK);
 					markerType = '\0';
-					if(languageDone || notRemain) {
+					if(notRemain) {
 						return SMD_VOID;
 					}
 					return SMD_BLOCK_INVALID;
 				}
+				markers.addStopContent(STATE_CODE_LANGUAGE, langPosEnd);
 			}
 			//else no add content of Code Language
 		}

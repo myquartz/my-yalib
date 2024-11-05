@@ -14,7 +14,7 @@ heading5      = "#####", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
 heading6      = "######", {( space | tab ), text}-, [ (space | tab), {"#"}] ;
  
 (* Normal blocks *)
-quote         = {quoteLine, newLine}-;
+quote         = quoteLine, {[backslash], newLine, quoteLine}, newLine;
 quoteLine     = ">", [ { space | tab }-, [textLine | unparseable]];
 
 code          = codeByMarker | codeByIndent;
@@ -23,7 +23,7 @@ codeMarker    = ("~", "~", "~" | "`", "`", "`");
 
 codeByIndent  = (tab | space), {unparseable}, newLine, {codeByIndent};
 
-paragraph     = textLine, {[controlCharacter], newLine, textLine}, newLine ;
+paragraph     = textLine, {[backslash], newLine, textLine}, newLine ;
 
  (* List blocks *)
 list          = unorderedList | orderedList;
@@ -79,7 +79,8 @@ letter        = lowerCase | upperCase;
 digit         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
 other         = "'" | '"' | "," | "." | "?" | "!" | ":" | ";" | "#" | "&" | "<" | "/" | "=" | "_" | "@" | "-" | ">" | "+" | "~";
 specialCharacter = "*" | "`";
-controlCharacter = "\0" | "\\";
+backslash = "\";
+controlCharacter = "\0" | "\";
 
 space         = "\s";
 tab           = "\t";

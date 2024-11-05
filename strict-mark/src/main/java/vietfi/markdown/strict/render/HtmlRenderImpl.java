@@ -42,6 +42,7 @@ public class HtmlRenderImpl implements SMDHtmlRender {
     //public static final String TAG_A_TEXT_END = "";
     public static final String TAG_A_END = "</a>";
     
+    public static final String TAG_NEW_LINE = "<br>";
     public static final String ESCAPE_QUOTE = "\"";
     
     public static final String TAG_IMG_BEGIN = "<img";
@@ -133,9 +134,12 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			outputBuilder.append(BLOCKQUOTE_BEGIN);
 	        			break;
-	        		case SMDParser.STATE_QUOTE_PARAGRAPH:
 	        		case SMDParser.STATE_PARAGRAPH:
 	    				outputBuilder.append(PARA_BEGIN);
+	    				break;
+	    				
+	        		case SMDParser.STATE_NEW_LINE:
+	        			outputBuilder.append(TAG_NEW_LINE);
 	    				break;
 	    				
 	        		case SMDParser.STATE_ORDERED_LIST:
@@ -205,7 +209,7 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			outputBuilder.append(BLOCKQUOTE_END);
 	        			break;
-	        		case SMDParser.STATE_QUOTE_PARAGRAPH:
+	        		
 	        		case SMDParser.STATE_PARAGRAPH:
 	    				outputBuilder.append(PARA_END);
 	    				break;

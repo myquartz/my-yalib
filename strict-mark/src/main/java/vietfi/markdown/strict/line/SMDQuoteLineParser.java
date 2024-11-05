@@ -61,20 +61,22 @@ public class SMDQuoteLineParser extends SMDLineParser {
 		buffer.mark();
 		int startPos = buffer.position();
 		first = buffer.get();
-		if(first == '>' && buffer.hasRemaining())
-			next = buffer.get();
+		if(first == '>') {
+			if(!buffer.hasRemaining()) { //
+				buffer.reset();
+				return SMD_LINE_VOID;
+			}
 		
-		if(first == '>' && !buffer.hasRemaining()) { //
-			buffer.reset();
-			return SMD_LINE_VOID;
+			next = buffer.get();
 		}
-		else if(first == '\n' || first != '>' || first == '>' && !Character.isWhitespace(next)) {//consumed
+
+		if(first == '\n' || first != '>' || first == '>' && !Character.isWhitespace(next)) {//consumed
 	
 			if(paraLines == 0) {
-				markers.rollbackLastMarkerContentStart(STATE_QUOTE_PARAGRAPH);
+				markers.rollbackLastMarkerContentStart(STATE_PARAGRAPH);
 			}
 			else
-				markers.addStopMarker(STATE_QUOTE_PARAGRAPH, first != '\n' ? startPos : startPos+1);
+				markers.addStopMarker(STATE_PARAGRAPH, first != '\n' ? startPos : startPos+1);
 			if(quoteLines == 0) {
 				markers.rollbackLastMarkerContentStart(STATE_QUOTE_BLOCK);
 			}
@@ -102,7 +104,7 @@ public class SMDQuoteLineParser extends SMDLineParser {
 				}
 				quoteLines++;
 				if(paraLines > 0) {
-					markers.addStopMarker(STATE_QUOTE_PARAGRAPH, pos);
+					markers.addStopMarker(STATE_PARAGRAPH, pos);
 					paraLines = 0;
 				}
 				
@@ -125,7 +127,7 @@ public class SMDQuoteLineParser extends SMDLineParser {
 		
 		if(paraLines == 0) {
 			//start of paragraph, same as quote block (start >)
-			markers.addStartMarker(STATE_QUOTE_PARAGRAPH, startPos);
+			markers.addStartMarker(STATE_PARAGRAPH, startPos);
 		}
 		
 		//rewind one char
@@ -138,14 +140,14 @@ public class SMDQuoteLineParser extends SMDLineParser {
 		
 		if(r == SMDLineParser.SMD_LINE_VOID || r == SMDLineParser.SMD_LINE_INVALID) {
 			if(quoteLines == 0) {
-				markers.rollbackLastMarkerContentStart(STATE_QUOTE_PARAGRAPH);
+				markers.rollbackLastMarkerContentStart(STATE_PARAGRAPH);
 				markers.rollbackLastMarkerContentStart(STATE_QUOTE_BLOCK);
 				ending = true;
 			}
 			else if(r == SMDLineParser.SMD_LINE_INVALID) {
 				if(paraLines > 0) {
 					//stop of paragraph
-					markers.addStopMarker(STATE_QUOTE_PARAGRAPH, buffer.position());
+					markers.addStopMarker(STATE_PARAGRAPH, buffer.position());
 					paraLines = 0;
 				}
 				
@@ -189,7 +191,7 @@ public class SMDQuoteLineParser extends SMDLineParser {
 	public void endLine(int position) {
 		this.lineParser.endLine(position);
 		if(paraLines > 0) //close paragraph
-			markers.addStopMarker(STATE_QUOTE_PARAGRAPH, position);
+			markers.addStopMarker(STATE_PARAGRAPH, position);
 		if(quoteLines > 0) {
 			markers.addStopMarker(STATE_QUOTE_BLOCK, position);
 			ending = true;
