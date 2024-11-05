@@ -111,7 +111,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 						
 						int pos = startPos;
 						
-						while(sp >= 0) {
+						while(sp >= 0 && buffer.hasRemaining()) {
 							ch = buffer.get();
 							
 							pos++;
@@ -122,8 +122,8 @@ public class SMDOrderedListBlockParser implements SMDParser {
 								break;
 							}
 							sp--;
-							assert buffer.hasRemaining():"invalid sp vs spc";
 						}
+						
 						if(ch != ' ' && ch != '\t') {
 							//because the indent2Spaces or indent3Spaces has one optional space
 							//back the optional space if not space.
