@@ -162,10 +162,10 @@ public class SMDCodeByMarkerBlockParser implements SMDParser {
 			npos++;
         	
 			if(endingFound) {//waiting for space or new line
-				if(ch != markerType && !Character.isWhitespace(ch)) {
-					markerType = '\0';
-					buffer.reset();
-					return SMD_BLOCK_INVALID;
+				if(ch != markerType && !Character.isWhitespace(ch) && ch != '\u001C') {
+					//not correct the end
+					endingFound = false;
+					markers.rollbackLastContentStop(STATE_CODE_BLOCK);
 				}
 				if(ch == '\n' || ch == '\u001C') {//gracefully
 					//finally,  add marker stop

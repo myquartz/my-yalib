@@ -526,4 +526,22 @@ public class SMDCodeByMarkerBlockParserTest {
 	    assertEquals(0, parser.markers().markedLength());
 	    		
 	}
+	
+	@Test
+	void test7() {
+		String inputText = "~~~\nsome\n~~~2\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDCodeByMarkerBlockParser parser = new SMDCodeByMarkerBlockParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_BLOCK_CONTINUE, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_CODE_BLOCK, SMDParser.STATE_CODE_BLOCK };
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    		
+	}
 }

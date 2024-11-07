@@ -120,11 +120,32 @@ public class SMDMarkers {
     /**
      * markers is empty
      * 
-     * @return
+     * @return true if emtpy
      */
     public boolean isEmpty() {
     	return fulfillIndex == 0;
     }
+    
+    /**
+     * return last added marker's state. If empty, return STATE_NONE
+     * 
+     * @return the last added marker's state
+     */
+    public int getLastMarkerState() {
+    	if(fulfillIndex == 0)
+    		return SMDParser.STATE_NONE;
+		return markerState(markers[fulfillIndex-1]);
+	}
+    
+    /**
+     * Return last added marker's position. If empty, -1 return.
+     * @return the last position of added markers.
+     */
+    public int getLastMarkerPosition() {
+    	if(fulfillIndex == 0)
+    		return -1;
+		return markerPosition(markers[fulfillIndex-1]);
+	}
     
     /**
      * Get state at index
@@ -266,7 +287,7 @@ public class SMDMarkers {
     	int pos = fulfillIndex - 1;
     	int value = markers[pos];
     	int lastState = getMarkerState(pos);
-    	//check for MARKER_START or CONTENT_START
+    	//check for CONTENT_START
     	if(lastState == ofState) {
     		if((value & MARKER_START) == MARKER_START) {//they are combined, remove only content start
     			markers[pos] = value ^ CONTENT_START;
@@ -274,6 +295,24 @@ public class SMDMarkers {
 	    	}
 	    	else if(pos > 0 && (value & CONTENT_START) == CONTENT_START && (markers[pos-1] & MARKER_START) == MARKER_START) {
 	    		fulfillIndex = pos - 1;
+    			return;
+	    	}
+    	}
+    }
+	
+	public void rollbackLastContentStop(int ofState) {
+    	if(fulfillIndex == 0) //empty, do nothing
+    		return;
+    	int pos = fulfillIndex - 1;
+    	int value = markers[pos];
+    	int lastState = getMarkerState(pos);
+    	//check for CONTENT_STOP
+    	if(lastState == ofState) {
+    		if((value & MARKER_STOP) == MARKER_STOP) {//they are combined, invalid
+    			throw new IllegalStateException();
+	    	}
+	    	else if(pos > 0 && (value & CONTENT_STOP) == CONTENT_STOP) {
+	    		fulfillIndex = pos;
     			return;
 	    	}
     	}

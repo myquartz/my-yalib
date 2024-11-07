@@ -24,12 +24,14 @@ public class MarkdownRenderController {
     	buffer.clear();
     	buffer.append(markdownInput);
     	//force end
-    	//buffer.append('\u001C');
+    	if(!markdownInput.trim().endsWith("\n")) {
+    		buffer.append('\u001C');
+    	}
     	buffer.flip();
     	markdownParser.markers().resetMarkers();
     	sb.setLength(0);
     	int r = markdownParser.parseNext(buffer);
-    	if(r == SMDParser.SMD_BLOCK_INVALID || r == SMDParser.SMD_BLOCK_GETS_EMPTY_LINE) {
+    	if(r == SMDParser.SMD_BLOCK_INVALID) {
     		return new RenderOutputDto(markdownInput, "Invalid Markdown, result="+r);
     	}
     	

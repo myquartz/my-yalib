@@ -3,6 +3,7 @@ package vietfi.markdown.strict.block;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.CharBuffer;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -445,4 +446,21 @@ public class SMDUnorderedListBlockParserTest {
 	    		
 	    assertArrayEquals(expected, actual);
 	}
+	
+	@Test
+	void test9() {
+		String inputText = "- # Heading\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDUnorderedListBlockParser parser = new SMDUnorderedListBlockParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDParser.SMD_BLOCK_INVALID, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    assertEquals(0, parser.markers().markedLength());
+	    		
+	}
+	
 }

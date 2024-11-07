@@ -79,8 +79,10 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 						itemCount++;
 				}
 				else {
-					if(itemCount == 0)
+					if(itemCount == 0) {
+						parser.markers().rollbackLastMarkerContentStart(STATE_LIST_ITEM);
 						parser.markers().rollbackLastMarkerContentStart(STATE_UNORDERED_LIST);
+					}
 					else {
 						parser.markers().rollbackLastMarkerContentStart(STATE_LIST_ITEM);
 						parser.markers().addStopMarker(STATE_UNORDERED_LIST, startPos);

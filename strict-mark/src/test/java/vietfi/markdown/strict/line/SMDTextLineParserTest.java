@@ -862,4 +862,104 @@ public class SMDTextLineParserTest {
 	    assertArrayEquals(expectedState, parser.markers().toStateArray());
 	    
 	}
+	
+	@Test
+	void test16() {
+		String inputText = "Hello: `\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_TEXT, SMDParser.STATE_TEXT};
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    
+	}
+	
+	@Test
+	void test17() {
+		String inputText = "Is \\*not emphasized*\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_TEXT, SMDParser.STATE_NONE, SMDParser.STATE_NONE, SMDParser.STATE_TEXT};
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    StringBuilder sb = new StringBuilder();
+	    render.produceHtml(parser.markers(), input, sb);
+	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
+	    assertEquals("Is *not emphasized*\n", sb.toString());
+	}
+	
+	@Test
+	void test17a() {
+		String inputText = "\\[not a link](/foo)\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_NONE, SMDParser.STATE_NONE, SMDParser.STATE_TEXT, SMDParser.STATE_TEXT};
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    StringBuilder sb = new StringBuilder();
+	    render.produceHtml(parser.markers(), input, sb);
+	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
+	    
+	    assertEquals("[not a link](/foo)\n", sb.toString());
+	    
+	}
+	
+	@Test
+	void test18() {
+		String inputText = "[foo]: /url1\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_INVALID, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    assertEquals(0, parser.markers().markedLength());
+	    
+	}
+
+	@Test
+	void test19() {
+		String inputText = "``` markdown\n";
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_INVALID, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    assertEquals(0, parser.markers().markedLength());
+	    
+	}
+	
+	
 }
