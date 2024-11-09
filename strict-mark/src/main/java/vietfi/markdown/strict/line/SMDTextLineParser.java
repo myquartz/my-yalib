@@ -379,10 +379,11 @@ public class SMDTextLineParser extends SMDLineParser {
     	//NONE is changed to STATE_TEXT if get a UnicodeIdentifierPart
     	if(change == NO_CHANGE) {
     		//not start with a paragraph text, it may be empty line as well
-    		if (stack[0] == STATE_NONE && !Character.isUnicodeIdentifierPart(ch))
+    		if (stack[stackPos] == STATE_NONE && !Character.isUnicodeIdentifierPart(ch))
     			return SMD_LINE_INVALID;
     		
 			//text
+			stack[0] = STATE_TEXT;
 			pushStack(STATE_TEXT);
 			markers.addStartContent(STATE_TEXT, position);
 			// Assume change to text if get any other character.
