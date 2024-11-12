@@ -204,11 +204,14 @@ public class SMDListItemParser extends SMDLineParser {
 			//first line is paragraph text
 			int r = textParser.parseLine(buffer);
 			assert r != SMD_LINE_BLANK_OR_EMPTY : "";
-			if(r == SMD_LINE_PARSED) {
+			if(r == SMD_LINE_PARSED || r == SMD_LINE_PARSED_END) {
 				//don't change currParser = PARSE_PARAGRAPH_TEXT;
 				itemLines++;
 				return SMD_LINE_PARSED;
 			}
+			//VOID or INVALID
+			if(level > 0)
+				markers.rollbackLastMarkerContentStart(STATE_LIST_ITEM);
 			buffer.reset();
 			return r;
 		}

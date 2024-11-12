@@ -17,6 +17,18 @@
 		#markdown-output li > p {
 			margin: 0.5rem 0 0;
 		}
+		
+		#markdown-output ol > li ol > li  {
+			list-style: lower-alpha;
+		}
+		
+		#markdown-output ol > li ol > li ol > li  {
+			list-style: lower-roman;
+		}
+		
+		#markdown-output ol > li ul > li ol > li  {
+			list-style: lower-roman;
+		}
 	</style>
 </head>
 <body>
@@ -29,7 +41,9 @@
             </div>
             <div class="col-md-6">
                 <h4>Rendered Output</h4>
-                <div id="markdown-output" class="border p-3" style="min-height: 300px;"></div>
+                <div id="markdown-output" class="border p-3" style="height:auto; min-height: 300px; max-height: 640px; overflow-y: scroll;">
+					
+				</div>
             </div>
         </div>
 		<pre id="markdown-debug" class="mt-4 font-monospace">
@@ -46,7 +60,10 @@
 	                $.ajax({
 	                    type: 'POST',
 	                    url: '/api/markdown-render',
-	                    data: { markdown_input: markdownText },
+						headers: {
+							"content-type": "text/plain"
+						},
+	                    data: markdownText,
 	                    success: function(response) {
 							window.processing = false;
 	                        $('#markdown-output').html(response.htmlContent);

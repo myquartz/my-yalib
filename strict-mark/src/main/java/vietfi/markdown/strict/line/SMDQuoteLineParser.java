@@ -199,14 +199,11 @@ public class SMDQuoteLineParser extends SMDLineParser {
 	}
 
 	@Override
-	public int compact(int shiftRemaining) {
-		int r = 1;
-		if(internalMarkers)
-			r = markers.compactMarkers(shiftRemaining);
-		this.lineParser.compact(shiftRemaining);
-		if(r<=0)
-			return 0;
-		return shiftRemaining;
+	public int compact(int position) {
+		if(this.internalMarkers) {
+			return markers.compactMarkers(position);
+		}
+		return this.lineParser.compact(position);
 	}
 
 	@Override

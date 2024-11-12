@@ -79,6 +79,15 @@ public class SMDOrderedListBlockParser implements SMDParser {
 					else
 						itemCount++;
 				}
+				else if(r == SMDLineParser.SMD_LINE_VOID) {
+					buffer.position(startPos); //reset back to start of line
+					parser.markers().rollbackLastMarkerContentStart(STATE_LIST_ITEM);
+					if(itemCount == 0) {
+						parser.markers().rollbackLastMarkerContentStart(STATE_ORDERED_LIST);
+						markerType = '\0';
+					}
+					return SMD_VOID;
+				}
 				else {
 					if(itemCount == 0)
 						parser.markers().rollbackLastMarkerContentStart(STATE_ORDERED_LIST);
@@ -139,11 +148,16 @@ public class SMDOrderedListBlockParser implements SMDParser {
 						}
 						else */
 						if(r == SMDLineParser.SMD_LINE_INVALID) { //invalid, close the sub list item
-							buffer.position(pos); //reset back
-							parser.markers().addStopMarker(STATE_LIST_ITEM, pos);
-							parser.markers().addStopMarker(STATE_ORDERED_LIST, pos);
+							buffer.position(startPos); //reset back
+							parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
+							parser.markers().addStopMarker(STATE_ORDERED_LIST, startPos);
 							ending = true;
 							return SMD_BLOCK_END;
+						}
+						if(r == SMDLineParser.SMD_LINE_VOID) {
+							buffer.position(startPos); //reset back to start of line
+							parser.markers().rollbackState(STATE_LIST_INDENT);
+							return SMD_VOID;
 						}
 					}
 					else {

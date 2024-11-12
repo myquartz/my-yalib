@@ -157,9 +157,7 @@ public class SMDHeadingByPoundsBlockParser implements SMDParser {
 	@Override
 	public int compact(int position) {
 		if(this.internalMarkers) {
-			int r = markers.compactMarkers(position);
-			if(r <= 0)
-				return 0;
+			return markers.compactMarkers(position);
 		}
 		return position;
 	}

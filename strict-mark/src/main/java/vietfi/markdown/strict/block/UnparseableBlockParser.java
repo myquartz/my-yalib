@@ -79,11 +79,9 @@ public class UnparseableBlockParser implements SMDParser {
 	
 	@Override
 	public int compact(int position) {
-		int r = 1;
-		if(internalMarkers)
-			r = markers.compactMarkers(position);
-		if(r<=0)
-			return 0;
+		if(this.internalMarkers) {
+			return markers.compactMarkers(position);
+		}
 		return position;
 	}
 

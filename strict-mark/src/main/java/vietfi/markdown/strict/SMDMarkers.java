@@ -318,6 +318,21 @@ public class SMDMarkers {
     	}
     }
 	
+	public void rollbackState(int ofState) {
+    	if(fulfillIndex == 0) //empty, do nothing
+    		return;
+    	int pos = fulfillIndex - 1;
+    	//check for state
+    	while(ofState == getMarkerState(pos)) {
+    		pos--;
+    		if((markers[pos+1] & MARKER_START) == MARKER_START) {//the open marker
+    			pos--;
+    			break;
+	    	}
+    	}
+    	fulfillIndex = pos + 1;
+    }
+	
 	public int cursor() {
 		return this.cursor;
 	}
@@ -439,36 +454,38 @@ public class SMDMarkers {
 		cursorReset(0);
 	}
 	
-	public boolean cursorIsCompactable(int shiftRemaining) {
+	public int getCompactablePosition(int upto) {
 		if(cursor == fulfillIndex || fulfillIndex == 0)
-    		return true;
-		return shiftRemaining <= markerPosition(markers[cursor]);
+    		return upto;
+		return Math.min(upto, markerPosition(markers[cursor]));
 	}
 	
 	/**
 	 * 
-	 * Reduce position of all markers by shiftRemaining. This method using before the call of CharBuffer.compact()
+	 * Reduce position of all markers by shiftRemaining.
+	 * This method using before the call of CharBuffer.compact()
 	 * for adjusting the position of markers to correct index of the buffer. 
 	 * 
-	 * @param shiftRemaining = charBuffer.position() before calling charBuffer.position().
-	 * @return number of reduced marker items.
+	 * @param uptoPosition = charBuffer.position() before calling charBuffer.position().
+	 * @return position the routine has compacted to
 	 */
-    public int compactMarkers(int shiftRemaining) {
+    public int compactMarkers(int uptoPosition) {
     	if(fulfillIndex == 0)
-    		return -1;
-    	if(shiftRemaining < 0)
+    		return uptoPosition;
+    	if(uptoPosition < 0)
     		throw new IllegalArgumentException();
-    	int last = 0;
-    	if(shiftRemaining > markerPosition(markers[fulfillIndex - 1])) { //shift larger than the last marker's position, remove all
-    		last = fulfillIndex;
+    	
+    	if(this.cursor == fulfillIndex &&
+    			uptoPosition >= markerPosition(markers[fulfillIndex - 1])) { //shift larger than the last marker's position, remove all
     		this.fulfillIndex = 0;
     		this.cursor = 0; //reset to first
-    		return last;
+    		return uptoPosition;
     	}
     	
-    	for(int i = 0; i < this.fulfillIndex; i++) {
-    		int pos = markerPosition(markers[i]) - shiftRemaining;
-    		if(pos < 0)
+    	int last = 0;
+    	for(int i = 0; i < Math.min(this.fulfillIndex, this.cursor); i++) {
+    		int pos = markerPosition(markers[i]) - uptoPosition;
+    		if(pos <= 0)
     			last++;
     		else {
 	    		//32 bits unsigned = 0x7FFFFFFF
@@ -477,15 +494,18 @@ public class SMDMarkers {
     	}
     	
     	if(last > 0) { //shift arrays of negative position
+    		int position = markerPosition(markers[last]);
     		for(int i = last; i < this.fulfillIndex; i++)
     			markers[i-last] = markers[i];
     		this.fulfillIndex = fulfillIndex - last;
+    		
     		if(this.cursor > last)
     			this.cursor = cursor - last;
     		else
     			this.cursor = 0;
+    		return position;
     	}
-    	return last;
+    	return markerPosition(markers[0]);
     }
  
     @Override

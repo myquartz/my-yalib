@@ -162,13 +162,11 @@ public class SMDCodeLineParser extends SMDLineParser {
 	}
 
 	@Override
-	public int compact(int shiftRemaining) {
-		if(internalMarkers) {
-			int r = markers.compactMarkers(shiftRemaining);
-			if(r <= 0)
-				return 0;
+	public int compact(int position) {
+		if(this.internalMarkers) {
+			return markers.compactMarkers(position);
 		}
-		return shiftRemaining;
+		return position;
 	}
 
 	public int getCodeLines() {
