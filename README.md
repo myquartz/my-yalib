@@ -1,15 +1,18 @@
-# my-yalib
+my-yalib overview
+=================
 
-Repository of "Yet Another Library" implementation for something like Markdown, YAML, JSON...
+A repository for **"Yet Another Library"** implementations, covering formats like Markdown, YAML, JSON, and more.
 
-## Why I create these stuffs
+## Why I Created These Libraries
 
-I am not happy with a big library for a side thing likes markdown, yaml. They are big library and they are complex implementation as well.
+I wasn't satisfied with the large, complex libraries available for side projects involving formats like Markdown or YAML. These libraries are often bulky and overcomplicated for what I need.
 
-In short, I reinvent the wheel, but smaller wheel and it may have some avantages over the existing one. The one feature I am sacrified for the lightweight library is strictly syntax compare to others.
+In essence, I've chosen to **reinvent the wheel**, but my goal is to create a **smaller and lighter wheel** that still offers some advantages over existing options. One key compromise I've made to achieve a lightweight library is enforcing **strict syntax**, unlike the more lenient syntax allowed by other libraries.
 
-However, it takes time to develop and to test, much as I did not think it would be. Finally, I have completed one:
+The development and testing have taken more time than I initially expected. However, I've managed to complete the first project:
 
-1. The strict markdown parser and render as well, it is the **strict-mark\** library. Lets read about the eBNF of the strict mark at [The syntax of strict mark](https://myquartz.github.io/my-yalib/strict-mark.html).
+1. The strict Markdown parser and renderer, known as the **strict-mark** library. You can explore the eBNF grammar of strict-mark in detail at [The Syntax of Strict-Mark](https://myquartz.github.io/my-yalib/strict-mark.html). Let's take a look to the Java source code and compiled package at **`strict-mark/`** directory.
 
-*to be developed..*
+*More to come...*
+
+---
