@@ -15,12 +15,12 @@ Trong Thông tư này, các từ ngữ dưới đây được hiểu như sau:
 
 1. Cho vay là hình thức cấp tín dụng, theo đó tổ chức tín dụng giao hoặc cam kết giao cho khách hàng một khoản tiền để sử dụng vào mục đích xác định trong một thời gian nhất định theo thỏa thuận với nguyên tắc có hoàn trả cả gốc và lãi.
 2. Tổ chức tín dụng cho vay là tổ chức tín dụng được thành lập và hoạt động theo quy định của Luật các tổ chức tín dụng, bao gồm:
-  a) Ngân hàng thương mại;
-  b) Ngân hàng hợp tác xã;
-  c) Tổ chức tín dụng phi ngân hàng;
-  d) Tổ chức tài chính vi mô;
-  đ) Quỹ tín dụng nhân dân;
-  e) Chi nhánh ngân hàng nước ngoài.
+   a) Ngân hàng thương mại;
+   b) Ngân hàng hợp tác xã;
+   c) Tổ chức tín dụng phi ngân hàng;
+   d) Tổ chức tài chính vi mô;
+   đ) Quỹ tín dụng nhân dân;
+   e) Chi nhánh ngân hàng nước ngoài.
 3. Khách hàng vay vốn tại tổ chức tín dụng (sau đây gọi là khách hàng) là pháp nhân, cá nhân, bao gồm:
   a) Pháp nhân được thành lập và hoạt động tại Việt Nam, pháp nhân được thành lập ở nước ngoài và hoạt động hợp pháp tại Việt Nam;
   b) Cá nhân có quốc tịch Việt Nam, cá nhân có quốc tịch nước ngoài.
