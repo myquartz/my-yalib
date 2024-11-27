@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
+import java.util.logging.Logger;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -15,11 +16,11 @@ import vietfi.markdown.strict.render.HtmlRenderImpl;
 @RestController
 @RequestMapping("/api")
 public class MarkdownRenderController {
-
+	static final Logger logger = Logger.getAnonymousLogger();
     private final SMDParser markdownParser = SMDParserChain.createParserOfStandard(100*4096);
     private final SMDHtmlRender htmlRenderer = new HtmlRenderImpl();
-    StringBuilder sb = new StringBuilder(48*1024);
-    StringBuilder debug = new StringBuilder(48*1024);
+    StringBuilder sb = new StringBuilder(32*1024);
+    StringBuilder debug = new StringBuilder(32*1024);
     CharBuffer buffer = CharBuffer.allocate(4*1024);
     
     @PostMapping(value = "/markdown-render", consumes = "text/plain", produces = "application/json; charset=UTF-8")
@@ -33,32 +34,43 @@ public class MarkdownRenderController {
 	    	int r = 0;
 	    	int nRead = 0;
 	    	int loop = 0;
+	    	int pos = 0;
 	    	while(nRead >= 0) {	    	
 	    		nRead = isr.read(buffer);
 	    		loop++;
-	    		if(nRead < 0)
+		    	buffer.flip();
+		    	r = markdownParser.parseNext(buffer);
+		    	if(r == SMDParser.SMD_BLOCK_INVALID) {
+		    		return new RenderOutputDto(buffer.toString(), "Loop "+loop+", invalid Markdown, result="+r);
+		    	}
+		    	debug.append("Loop "+loop+", nRead="+nRead+", "+markdownParser.markers().toString());
+		    	htmlRenderer.produceHtml(markdownParser.markers(), buffer, sb);
+		    	pos = markdownParser.markers().compactMarkers(buffer.position());
+		    	debug.append("Compacted "+pos+", markers length="+markdownParser.markers().markedLength()).append('\n');
+		    	markdownParser.compact(pos);
+		    	if(pos < buffer.position()) {
+		    		debug.append("WARN: compact "+pos+" less than "+buffer.position()).append('\n');
+		    		buffer.position(pos);
+		    	}
+		    	buffer.compact();
+	    		
+	    		if(nRead < 0) {
+	    			if(buffer.hasRemaining() && buffer.position() > 0) //force ending
+	    				buffer.append('\u001C');
+	    			
+	    			buffer.flip();
+	    			r = markdownParser.parseNext(buffer);
 	    			//force end
 	    	    	markdownParser.endBlock(buffer.position());
-	    		else {
-			    	buffer.flip();
-			    	r = markdownParser.parseNext(buffer);
-			    	if(r == SMDParser.SMD_BLOCK_INVALID) {
-			    		return new RenderOutputDto(buffer.toString(), "Invalid Markdown, result="+r);
-			    	}
-			    	debug.append("Loop "+loop+" "+markdownParser.markers().toString()).append('\n');
-			    	htmlRenderer.produceHtml(markdownParser.markers(), buffer, sb);
-			    	int pos = markdownParser.markers().compactMarkers(buffer.position());
-			    	markdownParser.compact(pos);
-			    	if(pos < buffer.position())
-			    		buffer.position(pos);
-			    	buffer.compact();
+	    	    	debug.append("Loop "+loop+", end, compact "+pos+", ending position "+buffer.position()).append('\n');
 	    		}
 		    }
     	} catch (IOException e) {
     		//ignore
+    		logger.info(e.toString());
 		}
     	
-    	debug.append(markdownParser.markers().toString()).append('\n');
+    	debug.append("Last, ").append(markdownParser.markers().toString()).append('\n');
     	htmlRenderer.produceHtml(markdownParser.markers(), buffer, sb);
     	
     	return new RenderOutputDto("", sb.toString(), debug.toString());

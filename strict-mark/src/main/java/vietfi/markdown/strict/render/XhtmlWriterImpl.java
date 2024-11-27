@@ -83,9 +83,12 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
     	boolean isInUrl = false;
     	
         while(markers.cursorIsAvailable()) {
+        	boolean isMarkerStop = markers.cursorIsMarkerStop();
+        	int contentBegin = markers.cursorPosition1();
+			if(!isMarkerStop && contentBegin >= buffer.position()) //exceed the output point
+				break;
+			
         	int state = markers.cursorState(); //extract state
-        	//if(!isMyState(state) && state != STATE_UNPARSABLE)
-        		//break;
         	
         	isInLinkText = false;
         	isInUrl = false;
@@ -164,7 +167,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         		}
         	}
         	//stop
-        	else if(markers.cursorIsMarkerStop()) { //MARKER_STOP
+        	else if(isMarkerStop) { //MARKER_STOP
         		//stop marker
         		switch(state) {
         		case SMDParser.STATE_STRIKETHROUGH:
@@ -248,8 +251,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         		}
         	}
         	
-        	int contentBegin = markers.cursorPosition1();
-			int contentEnd = Math.min(markers.cursorPosition2(), buffer.position());
+        	int contentEnd = Math.min(markers.cursorPosition2(), buffer.position());
 			
 			if (contentBegin >= 0 && contentBegin < contentEnd) {
 				if(buffer.hasArray()) {

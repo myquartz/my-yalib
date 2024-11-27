@@ -51,9 +51,12 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
     	boolean isInUrl = false;
     	
         while(markers.cursorIsAvailable()) {
+        	boolean isMarkerStop = markers.cursorIsMarkerStop();
+        	int contentBegin = markers.cursorPosition1();
+			if(!isMarkerStop && contentBegin >= buffer.position()) //exceed the output point
+				break;
+			
         	int state = markers.cursorState(); //extract state
-        	//if(!isMyState(state) && state != STATE_UNPARSABLE)
-        		//break;
         	
         	safeQuote = false;
         	isInLinkText = false;
@@ -132,7 +135,7 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
         		}
         	}
         	//stop
-        	else if(markers.cursorIsMarkerStop()) { //MARKER_STOP
+        	else if(isMarkerStop) { //MARKER_STOP
         		//stop marker
         		switch(state) {
 	        		case SMDParser.STATE_STRIKETHROUGH:
@@ -236,9 +239,8 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
         		}
         	}
         	
-        	int contentBegin = markers.cursorPosition1();
 			int contentEnd = Math.min(markers.cursorPosition2(), buffer.position());
-        	//content or plain text
+			//content or plain text
 			if (contentBegin >= 0 && contentBegin < contentEnd && contentOutput < contentEnd) {
         		//the link content, do not print out, save to lastText,
         		if(isInLinkText) {

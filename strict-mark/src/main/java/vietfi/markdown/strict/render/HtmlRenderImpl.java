@@ -93,10 +93,12 @@ public class HtmlRenderImpl implements SMDHtmlRender {
     	boolean isInUrl = false;
     	
         while(markers.cursorIsAvailable()) {
-        	int state = markers.cursorState(); //extract state
-        	//if(!isMyState(state) && state != STATE_UNPARSABLE)
-        		//break;
-        	
+        	boolean isMarkerStop = markers.cursorIsMarkerStop();
+        	int contentBegin = markers.cursorPosition1();
+			if(!isMarkerStop && contentBegin >= buffer.position()) //exceed the output point
+				break;
+			
+			int state = markers.cursorState(); //extract state
         	safeQuote = false;
         	isInLinkText = false;
         	isInUrl = false;
@@ -174,7 +176,7 @@ public class HtmlRenderImpl implements SMDHtmlRender {
         		}
         	}
         	//stop
-        	else if(markers.cursorIsMarkerStop()) { //MARKER_STOP
+        	else if(isMarkerStop) { //MARKER_STOP
         		//stop marker
         		switch(state) {
         			case SMDParser.STATE_STRIKETHROUGH:
@@ -278,7 +280,6 @@ public class HtmlRenderImpl implements SMDHtmlRender {
         		}
         	}
         	
-        	int contentBegin = markers.cursorPosition1();
 			int contentEnd = Math.min(markers.cursorPosition2(), buffer.position());
 			
 			if (contentBegin >= 0 && contentBegin < contentEnd) {

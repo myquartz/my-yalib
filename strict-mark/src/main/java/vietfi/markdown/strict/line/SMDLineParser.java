@@ -171,8 +171,44 @@ public abstract class SMDLineParser implements SMDParser {
 	}
 
 	/**
+	 * Consume the buffer until it gets a new line character or ending
 	 * 
-	 * Look forward of spaces, one tab = 4 spaces.
+	 * @param buffer the input buffer.
+	 */
+	public static void consumeUtilCatchNewLine(CharBuffer buffer) {
+		char ch = buffer.get(); //consume until the new line/ending
+		while(buffer.hasRemaining() 
+				&& !(ch == '\n' || ch == '\u001C')) {
+			ch = buffer.get(); //consume until the new line.
+		}
+		assert ch == '\n' || ch == '\u001C';
+	}
+	
+	/**
+	 * 
+	 * Look forward for a new line or ending.
+	 * 
+	 * @param buffer
+	 * @return how far from current position, -1 if not found
+	 */
+	public static int lookForwardNewLine(CharBuffer buffer) {
+		int pos = buffer.position();
+		
+		for(int i = 0; buffer.remaining() > i; i++) {
+			char ch = buffer.get(pos + i);
+						
+			if(ch == '\n' || ch == '\u001C') {
+				//got a new line
+				return i;
+			}
+		}
+		
+		return -1;
+	}
+	
+	/**
+	 * 
+	 * count forward of spaces, one tab = 4 spaces.
 	 * 
 	 * @param buffer
 	 * @param spaceStop number of space exceeds to stop (inclusive)

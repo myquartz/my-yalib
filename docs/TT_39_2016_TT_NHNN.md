@@ -38,7 +38,7 @@ Trong Thông tư này, các từ ngữ dưới đây được hiểu như sau:
   b) Gia hạn nợ là việc tổ chức tín dụng chấp thuận kéo dài thêm một khoảng thời gian trả nợ gốc và/hoặc lãi tiền vay, vượt quá thời hạn cho vay đã thoả thuận.
 11. Dư nợ gốc bị quá hạn bao gồm:
   a) Số dư nợ gốc bị chuyển nợ quá hạn theo quy định tại Điều 20 Thông tư này;
-  b) Số dư nợ gốc mà khách hàng không trả được nợ trước hạn khi tổ chức tín dụng chấm dứt cho vay, thu hồi nợ trước hạn theo quy định tại khoản 1 Điều 21 Thông tư này.Bổ sung
+  b) Số dư nợ gốc mà khách hàng không trả được nợ trước hạn khi tổ chức tín dụng chấm dứt cho vay, thu hồi nợ trước hạn theo quy định tại khoản 1 Điều 21 Thông tư này.
 
 ### Điều 3. Quyền tự chủ của tổ chức tín dụng
 

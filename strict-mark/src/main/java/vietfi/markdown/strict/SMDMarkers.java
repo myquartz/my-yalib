@@ -521,28 +521,25 @@ public class SMDMarkers {
     	sb.append("Markers[").append(fulfillIndex).append("]: start at ").append(start)
     		.append(", end at ").append(stop).append(", string length=").append(stop-start+1).append("\n");
     	
-    	IntFunction<String> op = new IntFunction<String>() {
-        	StringBuilder sb = new StringBuilder();
-			@Override
-			public String apply(int value) {
-				sb.setLength(0);
-				if((value & MARKER_START) == MARKER_START)
-					sb.append("<");
-				if((value & CONTENT_START) == CONTENT_START)
-					sb.append("[");
-				if((value & CONTENT_STOP) == CONTENT_STOP)
-					sb.append("]");
-				if((value & MARKER_STOP) == MARKER_STOP)
-					sb.append(">");
-				
-				sb.append(SMDMarkers.markerState(value));
-				return sb.toString();
-			}
-        	
-        };
+        for(int i = 0; i < this.fulfillIndex; i++) {
+        	if(i == this.cursor)
+        		sb.append('.');
+        	int value = markers[i];
+        	if((value & MARKER_START) == MARKER_START)
+				sb.append("<");
+			if((value & CONTENT_START) == CONTENT_START)
+				sb.append("[");
+			if((value & CONTENT_STOP) == CONTENT_STOP)
+				sb.append("]");
+			if((value & MARKER_STOP) == MARKER_STOP)
+				sb.append(">");
+			
+			sb.append(SMDMarkers.markerState(value)).append('\t');
+        }
         
-        sb.append(Arrays.stream(markers, 0, this.fulfillIndex).mapToObj(op).collect(Collectors.joining("\t"))).append("\n");
-        sb.append(Arrays.stream(markers, 0, this.fulfillIndex).mapToObj(v -> String.valueOf(v & 0x0FFFFF)).collect(Collectors.joining("\t"))).append("\n");
+        if(this.fulfillIndex == this.cursor)
+    		sb.append('.');
+        sb.append("\n").append(Arrays.stream(markers, 0, this.fulfillIndex).mapToObj(v -> String.valueOf(v & 0x0FFFFF)).collect(Collectors.joining("\t"))).append("\n");
         
         return sb.toString();
     }
@@ -551,6 +548,5 @@ public class SMDMarkers {
 	public int remaining() {
 		return markers.length - fulfillIndex;
 	}
-
 
 }

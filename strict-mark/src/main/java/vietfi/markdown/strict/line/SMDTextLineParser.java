@@ -24,7 +24,8 @@ public class SMDTextLineParser extends SMDLineParser {
 	protected static final int NO_CHANGE = 10;
 	protected static final int CONSUME_1_CHAR = 11;
 	protected static final int CONSUME_2_CHARS = 12;
-	protected static final int PARSE_BREAK = 13; //stop parsing
+	protected static final int ROLLBACK = 13;
+	protected static final int PARSE_BREAK = 14; //stop parsing
        
 	//These variables will be reset each time to call parseLine.
     protected final SMDMarkers markers;
@@ -69,73 +70,98 @@ public class SMDTextLineParser extends SMDLineParser {
     	if(buffer.length() >= 0x0FFFFF) //over addressable position
     		throw new IllegalArgumentException("Buffer is too large, over its addressable of position (Integer)");
     
-    	//reset for next line
+    	int nl = lookForwardNewLine(buffer);
+    	
+    	if (nl < 0)
+    		return SMD_LINE_VOID;
+    	
+    	if (nl == 0) {
+    		//consume the new line char
+    		buffer.get();
+    		return SMD_LINE_BLANK_OR_EMPTY;
+    	}
+    	
+    	buffer.mark();
+    	
+    	//reset status for the line parsing
     	stackPos = 0;
     	stack[0] = STATE_NONE; //set for replacing if catching any event
     	
     	int change = NO_CHANGE;
     	
-    	char ch = '\0';
+    	boolean isFirstChange = true;
+    	//the currChar position, unlike other parsers.
+    	int pos = buffer.position();
+    	char currChar = '\0';
     	char nextChar = '\0';
     	char next2Char = '\0';
-    	
-    	int startMarkerFill = markers.markedLength();
-    	buffer.mark();
-    	//initial position
-    	int startPos;
-    	int pos = startPos = buffer.position();
-    	
-        while (buffer.hasRemaining() || ch != '\0') {
-        	//get 3 chars at once for forward lookup
-        	if(ch == '\0')
-        		ch = buffer.get();
+    	//first char is always match the condition because the line has at least 2 chars.
+        while (buffer.hasRemaining()) {
+        	if(change == CONSUME_2_CHARS) {
+        		//ignore last loop char
+        		buffer.get();
+        		pos++;
+        	}
         	
+        	currChar = buffer.get();
         	//provision the nextChar and next2Char.
-        	if(ch != '\n' && ch != '\u001C' && nextChar == '\0' && buffer.hasRemaining())
-        		nextChar = buffer.get();
-        	if(nextChar != '\0' && nextChar != '\n' && nextChar != '\u001C' && next2Char == '\0' && buffer.hasRemaining())
-    			next2Char = buffer.get();
+        	if(buffer.remaining() > 0) {
+    			nextChar = buffer.get(pos+1);
+        		if(buffer.remaining() > 1)
+        			next2Char = buffer.get(pos+2);
+        		else
+        			next2Char = '\0';
+        	} else {
+        		nextChar = '\0';
+            	next2Char = '\0';
+        	}
         	
         	int state = stack[stackPos];
             switch (state) {
                 case STATE_NONE:
-                    change = handleNoneState(state, pos, ch, nextChar, next2Char);
+                    change = handleNoneState(isFirstChange, state, pos, currChar, nextChar, next2Char);
+                    if(change == NO_CHANGE && isFirstChange) { //none must change to any other at first
+                		buffer.reset();
+                		//ending the last
+                		endLine(buffer.position());
+                		return SMD_LINE_INVALID;
+                    }
                     break;
                 case STATE_TEXT:
-                	change = handleTextState(state, pos, ch, nextChar, next2Char);
+                	change = handleTextState(state, pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_STRIKETHROUGH:
-                	change = handleStrikeThroughState(state, pos, ch, nextChar, next2Char);
+                	change = handleStrikeThroughState(state, pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_BOLD:
-                	change = handleBoldState(state, pos, ch, nextChar, next2Char);
+                	change = handleBoldState(state, pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_ITALIC:
-                	change = handleItalicState(state, pos, ch, nextChar, next2Char);
+                	change = handleItalicState(state, pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_UNDERLINE:
-                	change = handleUnderlineState(pos, ch, nextChar, next2Char);
+                	change = handleUnderlineState(pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_INLINE_CODE:
-                	change = handleInlineCodeState(pos, ch, nextChar, next2Char);
+                	change = handleInlineCodeState(pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_LINK:
-                	change = handleLinkState(pos, ch, nextChar, next2Char);
+                	change = handleLinkState(pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_URL:
-                	change = handleUrlState(pos, ch, nextChar, next2Char);
+                	change = handleUrlState(pos, currChar, nextChar, next2Char);
                 	break;
                 case STATE_IMAGE:
-                	change = handleImageState(pos, ch, nextChar, next2Char);
+                	change = handleImageState(pos, currChar, nextChar, next2Char);
                 	break;
                 case STATE_IMAGE_SRC:
-                	change = handleImageSourceState(pos, ch, nextChar, next2Char);
+                	change = handleImageSourceState(pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_NEW_LINE:
-                	change = handleNewLineState(pos, ch, nextChar, next2Char);
+                	change = handleNewLineState(pos, currChar, nextChar, next2Char);
                     break;
                 case STATE_UNPARSABLE:
-                	if (ch == '\n' || ch == '\u001C') {
+                	if (currChar == '\n' || currChar == '\u001C') {
                 		// End of paragraphText
                 		popAllStack( pos );
                     	change = SMD_LINE_PARSED;
@@ -144,47 +170,30 @@ public class SMDTextLineParser extends SMDLineParser {
                 		change = NO_CHANGE;
                 	break;
                 default:
-                    change = handleUnknownState(state, pos, ch, nextChar, next2Char);
+                    change = handleUnknownState(state, pos, currChar, nextChar, next2Char);
                     break;
             }
             
-            switch(change) {
-            case NO_CHANGE:
-            	//no change, you can use ch as usual
-            case CONSUME_1_CHAR:
-	            //handler consume only 1, get next char
-	            ch = nextChar;
-	            nextChar = next2Char;
-	            next2Char = '\0'; //to read from buffer
-	            pos++;
-	            break;
-            case CONSUME_2_CHARS:
-            	//handle function has consume 2 char already
-            	ch = next2Char;
-	            nextChar = next2Char = '\0'; //to read from buffer in next loop
-	            pos+=2;
-	            break;
-            }
             //change reset notify
             if(change == PARSE_BREAK || change < NO_CHANGE) {
             	break;
             }
+            if(stackPos == 0 && isFirstChange) //back to first
+            	isFirstChange = false;
+            
+            //next loop to process
+        	pos++;
+        }
+        
+        if(change == ROLLBACK && isFirstChange) {
+        	buffer.reset();
+    		//ending the last
+    		endLine(buffer.position());
+    		return SMD_LINE_INVALID;
         }
         
     	//can not parse to any kind of marker.
-        if(change == PARSE_BREAK && pos == startPos) { //Empty line
-        	return SMD_LINE_BLANK_OR_EMPTY;
-        }
-        else if(change == NO_CHANGE) {//not new line at end, can not detect any
-        	markers.setMarkerFulfill(startMarkerFill);
-        	buffer.reset();
-        	return SMD_LINE_VOID;
-        }
-        else if (change < NO_CHANGE) {
-        	if(change == SMD_LINE_VOID || change == SMD_LINE_INVALID) {
-        		markers.setMarkerFulfill(startMarkerFill);
-        		buffer.reset();
-        	}
+        if (change < NO_CHANGE) {
         	return change;
         }
         
@@ -229,7 +238,7 @@ public class SMDTextLineParser extends SMDLineParser {
     
     private void popAllStack(int endPosition) {
     	if(stackPos > 0) {
-    		for (int j = stackPos; j > 0; j--) {
+    		for (int j = stackPos; j >= 0; j--) {
     			int state = stack[j];
     			switch (state) {
     			case STATE_UNPARSABLE:
@@ -300,7 +309,7 @@ public class SMDTextLineParser extends SMDLineParser {
         	nextState = STATE_UNDERLINE;
         	endPosition = position+2;
         	change = CONSUME_2_CHARS;
-        } else if (ch == '`' && nextChar != '\0') { //accept a white space followed
+        } else if (ch == '`' && nextChar != '\0' && nextChar != '`') { //accept a white space followed
             // Check for inline code
         	nextState = STATE_INLINE_CODE;
         	endPosition = position+1;
@@ -329,11 +338,10 @@ public class SMDTextLineParser extends SMDLineParser {
 	        	nextState = STATE_NEW_LINE;
 	        	change = CONSUME_1_CHAR;
         	}
-        	else {//any char keeping, no change state, no add marker
+        	else if(isChangeableTo(STATE_TEXT)) {//escape the char, no change state, no add marker.
         		markers.addStartMarker(STATE_NONE, position);
         		markers.addStopMarker(STATE_NONE, position+1);
         		if(state == STATE_NONE) {
-        			stack[0] = STATE_TEXT;
         			pushStack( STATE_TEXT );
         			markers.addStartContent(STATE_TEXT, position+1);
         		}
@@ -342,9 +350,7 @@ public class SMDTextLineParser extends SMDLineParser {
         }
     	
     	if(change != NO_CHANGE && isChangeableTo(nextState)) {
-			//replace zero to state text
-    		if(state == STATE_NONE)
-    			stack[0] = STATE_TEXT;
+    		//push new stack, keeping stack[0] == STATE_NONE
     		pushStack( nextState );
     		switch(nextState) {
     			case STATE_TEXT:
@@ -362,7 +368,7 @@ public class SMDTextLineParser extends SMDLineParser {
         	return change;
     	}
     	
-    	if(change != NO_CHANGE) { //next state is not changeable, then it stops parsing
+    	if(change != NO_CHANGE && markers.remaining() >= 4 + stackPos) { //next state is not changeable, then it stops parsing
     		pushStack( STATE_UNPARSABLE );
     		markers.addStartMarkerContent(STATE_UNPARSABLE, position, position);
         	return CONSUME_1_CHAR;
@@ -374,22 +380,32 @@ public class SMDTextLineParser extends SMDLineParser {
     	throw new RuntimeException("Unknown state: " + state);
     }
     
-    private int handleNoneState(int state, int position, char ch, char nextChar, char next2Char) {
-    	int change = changeState(state, position, ch, nextChar, next2Char);
-    	//NONE is changed to STATE_TEXT if get a UnicodeIdentifierPart
-    	if(change == NO_CHANGE) {
-    		//not start with a paragraph text, it may be empty line as well
-    		if (stack[stackPos] == STATE_NONE && !Character.isUnicodeIdentifierPart(ch))
-    			return SMD_LINE_INVALID;
-    		
-			//text
-			stack[0] = STATE_TEXT;
-			pushStack(STATE_TEXT);
-			markers.addStartContent(STATE_TEXT, position);
-			// Assume change to text if get any other character.
-			change = CONSUME_1_CHAR;
+    private int handleNoneState(boolean isFirstChange, int state, int position, char ch, char nextChar, char next2Char) {
+    	if (ch == '\n' || ch == '\u001C') { //new line, break at end as well
+        	popAllStack(position); //not including new line
+        	return PARSE_BREAK;
+        }
+    	else if(Character.isWhitespace(ch) || Character.isISOControl(ch)) {
+    		if(!isFirstChange) {
+    			pushStack(STATE_TEXT);
+				markers.addStartContent(STATE_TEXT, position);
+				return CONSUME_1_CHAR;
+    		}
+    		return NO_CHANGE;
     	}
-        return change;
+    	else {
+	    	int change = changeState(state, position, ch, nextChar, next2Char);
+	    	//NONE is changed to STATE_TEXT if get a UnicodeIdentifierPart
+	    	if(change == NO_CHANGE && isFirstChange && Character.isUnicodeIdentifierPart(ch)) {
+				//text at first because it never roll back.
+				stack[0] = STATE_TEXT;
+				//pushStack(STATE_TEXT);
+				markers.addStartContent(STATE_TEXT, position);
+				// Assume change to text if get any other character.
+				change = CONSUME_1_CHAR;
+	    	}
+	        return change;
+    	}
     }
 
     private int handleTextState(int state, int position, char ch, char nextChar, char next2Char) {
@@ -408,8 +424,6 @@ public class SMDTextLineParser extends SMDLineParser {
     		//rollback
     		markers.rollbackLastMarkerContentStart(STATE_NEW_LINE);
     		popStack();
-    		if (stack[0] == STATE_NONE)
-    			return SMD_LINE_INVALID;
     	}
     	
     	return NO_CHANGE;
@@ -460,7 +474,7 @@ public class SMDTextLineParser extends SMDLineParser {
         }
 
     	//the underline can contain only inline code
-	if (ch == '`') {
+    	if (ch == '`') {
         	if(isChangeableTo(STATE_INLINE_CODE)) {
         		pushStack( STATE_INLINE_CODE);
         		markers.addStartMarkerContent(STATE_INLINE_CODE, position, position+1 );
@@ -475,7 +489,7 @@ public class SMDTextLineParser extends SMDLineParser {
     	if (ch == '\n' || ch == '\u001C') {
     		// End of underline
         	popAllStack(position);
-        	return SMD_LINE_PARSED;
+        	return PARSE_BREAK;
         }
     	return NO_CHANGE;
     }
@@ -485,12 +499,14 @@ public class SMDTextLineParser extends SMDLineParser {
     			
         if (ch == '`') {
         	popStack();
-            // End of inline code
+            // End of inline code, openPosition is start of content
         	if(position == openPosition && markers.getLastMarkerState() == STATE_INLINE_CODE) {
+        		int oldPos = markers.getLastMarkerPosition();
         		//empty between open/close
-        		if(stackPos == 0)
-        			return SMD_LINE_INVALID;
         		markers.rollbackLastMarkerContentStart(STATE_INLINE_CODE);
+        		if(markers.getLastMarkerState() != STATE_TEXT)
+        			markers.addStartContent(STATE_TEXT, oldPos);
+        		return ROLLBACK;
         	}
         	else
         		markers.addStopContentMarker(STATE_INLINE_CODE, position, position+1);
@@ -500,14 +516,15 @@ public class SMDTextLineParser extends SMDLineParser {
         if (ch == '\n' || ch == '\u001C') {
         	// End of image and all the line
         	if(position == openPosition && markers.getLastMarkerState() == STATE_INLINE_CODE) {
-        		//empty line
-        		if(stackPos == 0) 
-        			return SMD_LINE_INVALID;
+        		//ending line
         		popStack();
+        		int oldPos = markers.getLastMarkerPosition();
         		markers.rollbackLastMarkerContentStart(STATE_INLINE_CODE);
+        		if(markers.getLastMarkerState() != STATE_TEXT)
+        			markers.addStartContent(STATE_TEXT, oldPos);
         	}
         	popAllStack(position);
-        	return SMD_LINE_PARSED;
+        	return PARSE_BREAK;
         }
         
         return NO_CHANGE;
@@ -529,15 +546,16 @@ public class SMDTextLineParser extends SMDLineParser {
         
         if (ch == ']' || ch == '\n' || ch == '\u001C') { //invalid close of link, return back to value
         	popStack();
+        	int oldPos = markers.getLastMarkerPosition();
         	markers.rollbackLastMarkerContentStart(STATE_LINK);
-        	if (stackPos == 0) //a link at start
-    			return SMD_LINE_INVALID;
+        	
+        	if(markers.getLastMarkerState() != STATE_TEXT)
+        		markers.addStartContent(STATE_TEXT, oldPos);
 	        if (ch == '\n' || ch == '\u001C') {
 	    		// Early end of Link with empty
 	        	popAllStack(position );
-	        	return SMD_LINE_PARSED;
 	        }
-	        return CONSUME_1_CHAR;
+	        return ROLLBACK;
         }
         
         return NO_CHANGE;
@@ -556,7 +574,7 @@ public class SMDTextLineParser extends SMDLineParser {
         } else if (ch == '\n' || ch == '\u001C') {
     		// End of paragraphText
         	popAllStack(position );
-        	return SMD_LINE_PARSED;
+        	return PARSE_BREAK;
         }
         return NO_CHANGE;
     }
@@ -574,15 +592,16 @@ public class SMDTextLineParser extends SMDLineParser {
         
         if (ch == ']' || ch == '\n' || ch == '\u001C') { //invalid close of image, return back to value
         	popStack();
+        	int oldPos = markers.getLastMarkerPosition();
         	markers.rollbackLastMarkerContentStart(STATE_IMAGE);
-        	if (stackPos == 0) //a link at start
-    			return SMD_LINE_INVALID;
+        	
+        	if(markers.getLastMarkerState() != STATE_TEXT)
+        		markers.addStartContent(STATE_TEXT, oldPos);
 	        if (ch == '\n' || ch == '\u001C') {
 	    		// Early end of Link with empty
 	        	popAllStack(position );
-	        	return SMD_LINE_PARSED;
 	        }
-	        return CONSUME_1_CHAR;
+	        return ROLLBACK;
         }
         
         return NO_CHANGE;
@@ -601,7 +620,7 @@ public class SMDTextLineParser extends SMDLineParser {
         } else if (ch == '\n' || ch == '\u001C') {
     		// End of paragraphText
         	popAllStack(position );
-        	return SMD_LINE_PARSED;
+        	return PARSE_BREAK;
         }
         return NO_CHANGE;
     }

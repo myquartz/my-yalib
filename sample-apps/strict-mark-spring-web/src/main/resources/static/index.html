@@ -32,20 +32,24 @@
 	</style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center">Markdown Renderer</h1>
-        <div class="row mt-4">
+    <div class="container mt-2">
+        <div class="row mt-2">
             <div class="col-md-6">
                 <h4>Markdown Input</h4>
-                <textarea id="markdown-input" class="form-control font-monospace" rows="18" placeholder="Enter Markdown text here..."></textarea>
-            </div>
+                <textarea id="markdown-input" class="form-control font-monospace" rows="16" placeholder="Enter Markdown text here..."></textarea>
+			</div>
             <div class="col-md-6">
-                <h4>Rendered Output</h4>
-                <div id="markdown-output" class="border p-3" style="height:auto; min-height: 300px; max-height: 640px; overflow-y: scroll;">
-					
-				</div>
+				<h4>Html output</h4>
+				<textarea id="html-output" class="form-control font-monospace" readonly rows="16" placeholder="Result will be here"></textarea>
             </div>
         </div>
+		<div class="row mt-2">
+			<div class="col-12">
+				<h4>Rendered Output</h4>
+                <div id="markdown-output" class="border p-3" style="height:auto; min-height: 300px; max-height: 540px; overflow-y: scroll;">
+				</div>
+			</div>
+		</div>
 		<pre id="markdown-debug" class="mt-4 font-monospace">
 		</pre>
     </div>
@@ -67,10 +71,8 @@
 	                    success: function(response) {
 							window.processing = false;
 	                        $('#markdown-output').html(response.htmlContent);
-							$('#markdown-debug').text(
-								(response.markdownContent??"").replaceAll('\n','\\n')
-								+"\n\n"+(response.htmlContent??"").replaceAll('\n','\\n')
-								+"\n\n"+response.debugContent);
+							$('#html-output').val(response.htmlContent);
+							$('#markdown-debug').text(response.debugContent);
 	                    },
 	                    error: function(e) {
 							window.processing = false;
@@ -78,8 +80,10 @@
 	                    }
 	                });
 				}
-				else if(!window.processing)
+				else if(!window.processing) {
 					$('#markdown-output').text('');
+					$('#html-output').val('');
+				}
             });
         });
     </script>
