@@ -36,6 +36,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 	private char markerType = '\0';
 	private boolean ending = false;//the ending
 	private int itemCount = 0; //li counts
+	private int spacesOrTabLimit = 4;//space stop counts
 	
 	@Override
 	public int parseNext(CharBuffer buffer) {
@@ -49,11 +50,15 @@ public class SMDOrderedListBlockParser implements SMDParser {
 			ending = false;
 		}
 		
+		byte list = -1;
 		while(!ending && buffer.hasRemaining()) {
 			int startPos = buffer.position();
-			int l = SMDListItemParser.lookForwardOrderedList(buffer, markerType);
+			if(list < 0)
+				list = SMDListItemParser.lookForwardOrderedList(buffer, markerType);
 			
-			if(l > 0) {
+			if(list > 0) {
+				//reset spaceStopCount for next list
+				spacesOrTabLimit = 4;
 				if(itemCount > 0) { //end the last LI
 					parser.endLine(startPos);
 					parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
@@ -99,6 +104,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 					buffer.position(startPos); //reset
 					return SMD_BLOCK_INVALID;
 				}
+				list = -1;
 			}
 			else {
 				boolean blankLine = SMDLineParser.detectBlankLine(buffer);
@@ -109,18 +115,18 @@ public class SMDOrderedListBlockParser implements SMDParser {
 					}
 					return SMD_BLOCK_INVALID;
 				}
-				else { //l <= 0 and in the list
-					int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, 3, 1);
+				else { //list <= 0 and in the list
+					final int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, spacesOrTabLimit, 1);
 					
-					if(sp >= 2) { //a tab or more than 2 or 3 spaces, depending on parser
+					if(sp >= 3) { //a tab or more than 3 or 4 spaces, depending on parser
 						if(!blankLine)
 							parser.markers().addStartMarker(STATE_LIST_INDENT, startPos);
 						//next 2 chars or 1 tab
 						char ch = ' ';
 						
 						int pos = startPos;
-						
-						while(sp >= 0 && buffer.hasRemaining()) {
+						int spc = sp;
+						while(spc > 0 && buffer.hasRemaining()) {
 							ch = buffer.get();
 							
 							pos++;
@@ -130,7 +136,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 							if((ch == '\n' || ch == '\u001C')) {
 								break;
 							}
-							sp--;
+							spc--;
 						}
 						
 						if(ch != ' ' && ch != '\t') {
@@ -152,6 +158,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 							parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
 							parser.markers().addStopMarker(STATE_ORDERED_LIST, startPos);
 							ending = true;
+							spacesOrTabLimit = 4;
 							return SMD_BLOCK_END;
 						}
 						if(r == SMDLineParser.SMD_LINE_VOID) {
@@ -159,16 +166,28 @@ public class SMDOrderedListBlockParser implements SMDParser {
 							parser.markers().rollbackState(STATE_LIST_INDENT);
 							return SMD_VOID;
 						}
+						//next line is a sublist same first stop count
+						if(spacesOrTabLimit > sp)
+							spacesOrTabLimit = sp;
 					}
 					else {
 						parser.endLine(buffer.position());
-						if(blankLine)
+						if(blankLine) {
 							SMDLineParser.consumeBlankLine(buffer);
-						//not a list anymore
-						parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
-						parser.markers().addStopMarker(STATE_ORDERED_LIST, buffer.position());
-						ending = true;
-						return SMD_BLOCK_END;
+						}
+						byte nl = buffer.hasRemaining() ? SMDListItemParser.lookForwardOrderedList(buffer, markerType) : 0;
+						
+						if(nl == 0) {
+							//not a list anymore
+							parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
+							parser.markers().addStopMarker(STATE_ORDERED_LIST, buffer.position());
+							ending = true;
+							return SMD_BLOCK_END;
+						}
+						else if(nl < 0)
+							break;
+						else
+							list = nl;
 					}
 					
 				}
@@ -186,6 +205,7 @@ public class SMDOrderedListBlockParser implements SMDParser {
 			parser.markers().addStopMarker(STATE_LIST_ITEM, position);
 			parser.markers().addStopMarker(STATE_ORDERED_LIST, position);
 			ending = true;
+			spacesOrTabLimit = 4;
 		}
 	}
 	

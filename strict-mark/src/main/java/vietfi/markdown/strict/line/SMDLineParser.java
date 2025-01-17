@@ -130,7 +130,7 @@ public abstract class SMDLineParser implements SMDParser {
 				break;
 			
 			if(ch == '\n' || ch == '\u001C') {
-				//got a new line, invalid of the lookup.
+				//got a new line, stop of the lookup.
 				return true;
 			}
 		}
@@ -204,6 +204,33 @@ public abstract class SMDLineParser implements SMDParser {
 		}
 		
 		return -1;
+	}
+	
+	/**
+	 * Consume the buffer until it counts enough spaces or tab. 
+	 * 
+	 * @param buffer the input buffer.
+	 * @param space number of spaces to consume (maximum).
+	 * @param tab number of tabs to consume (break condition)
+	 * @return total number of spaces left if there is a number tab then space -= tab * 4.
+	 */
+	public static int consumeSpaceOrTab(CharBuffer buffer, int space, int tab) {
+		if(space == 0 && tab == 0)
+			return 0;
+		
+		while(buffer.hasRemaining() && space > 0) {
+			char ch = buffer.get(); //consume until the space
+			if(ch == ' ')
+				space --;
+			else if(ch == '\t') {
+				tab --;
+				space -= 4;
+				if(tab <= 0) {
+					return space;
+				}
+			}
+		}
+		return space;
 	}
 	
 	/**

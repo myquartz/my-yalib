@@ -467,7 +467,7 @@ public class SMDListItemParserTest {
 	void test9() {
 	    String inputText = " The following list:\n"
 	    		+ "* item first.\n"
-	    		+ "   item next.\n"
+	    		+ "  item next.\n"
 	    		+ "* item 3rd.\n"
 	    		+ "\titem 3rd+.\n"
 	    		+ "\n"
@@ -579,7 +579,7 @@ public class SMDListItemParserTest {
 	void test11() {
 	    String inputText = " The following list:\n"
 	    		+ "* item first.\n"
-	    		+ "    Code here.\n"
+	    		+ "   Code here.\n"
 	    		+ "  \n"
 	    		+ "  New sub paragraph\n"
 	    		+ "* item next.\n"
@@ -675,7 +675,7 @@ public class SMDListItemParserTest {
 	    String expected = "The following list:\n"
 	    		+ "<ul>\n"
 	    		+ "<li>item first.\n"
-	    		+ "<pre><code>Code here.\n"
+	    		+ "<pre><code> Code here.\n"
 	    		+ "</code></pre>\n"
 	    		+ "</li>\n"
 	    		+ "</ul>\n"

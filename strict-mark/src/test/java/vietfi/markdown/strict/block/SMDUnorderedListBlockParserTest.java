@@ -262,8 +262,8 @@ public class SMDUnorderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ul>","<li>Block quote <i>italic</i> is ok.","</li>","</ul>",
-	    		"<ul>","<li>Another blockquote. Goodbye.","</li>","</ul>"
+	    		"<ul>","<li>Block quote <i>italic</i> is ok.","</li>",
+	    		"<li>Another blockquote. Goodbye.","</li>","</ul>"
 	    };
 	    		
 	    Object[] actual = sb.toString().lines().collect(Collectors.toList()).toArray();
@@ -360,7 +360,7 @@ public class SMDUnorderedListBlockParserTest {
 	void test7() {
 		String inputText = "* Normal text\n"
 				+ "  > Block quote *italic* is ok.\n"
-				+ "   1. Another level.\n"
+				+ "  1. Another level.\n"
 				+ "  > Block quote end\n\n";
 	    System.out.println("----test7-----\n" + inputText + "\n----------");
 	    
@@ -405,7 +405,7 @@ public class SMDUnorderedListBlockParserTest {
 	void test8() {
 		String inputText = "* Normal text\n"
 				+ "  > Block quote *italic* is ok.\n"
-				+ "   1. Another level.\n"
+				+ "  1. Another level.\n"
 				+ "    \n"
 				+ "  Paragraph at end\n\n";
 	    System.out.println("----test8-----\n" + inputText + "\n----------");
