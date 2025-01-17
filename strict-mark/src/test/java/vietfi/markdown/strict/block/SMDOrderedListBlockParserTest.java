@@ -234,7 +234,7 @@ public class SMDOrderedListBlockParserTest {
 	void test4() {
 		String inputText = "1. Block quote *italic* is ok.\n" +
 				"\n"+
-	            "2. Another blockquote. Goodbye.\n";
+	            "2. Another blockquote. Goodbye.\n\n";
 	    System.out.println("----test4-----\n" + inputText + "\n----------");
 	    
 	    CharBuffer input = CharBuffer.wrap(inputText);
@@ -263,8 +263,8 @@ public class SMDOrderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block quote <i>italic</i> is ok.","</li>","</ol>",
-	    		"2. Another blockquote. Goodbye."
+	    		"<ol>","<li>Block quote <i>italic</i> is ok.","</li>",
+	    		"<li>Another blockquote. Goodbye.","</li>","</ol>"
 	    };
 	    		
 	    Object[] actual = sb.toString().lines().collect(Collectors.toList()).toArray();
@@ -444,6 +444,55 @@ public class SMDOrderedListBlockParserTest {
 	    		"<ul>","<li>Another level.","</li>","</ul>",
 	    		"<p>Paragraph at end","</p></li>",
 	    		"<li>Item text","</li>","</ol>",
+	    };
+	    		
+	    Object[] actual = sb.toString().lines().collect(Collectors.toList()).toArray();
+	    		
+	    assertArrayEquals(expected, actual);
+	}
+	
+	@Test
+	void test9() {
+		String inputText = "1. Item 1.\n"
+				+ "   - Identify and resolve code smells, vulnerabilities, and maintainability issues:\n"
+				+ "     * Log a bug\n"
+				+ "       a correction of work\n"
+				+ "     * Provide evidence\n"
+				+ "\n"
+				+ "2. **Unit Test Execution**\n\n";
+		CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDOrderedListBlockParser parser = new SMDOrderedListBlockParser();
+	    UnparseableBlockParser fallparser = new UnparseableBlockParser(parser.markers());
+	    StringBuilder sb = new StringBuilder(256);
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    
+	    int r1, r2;
+	    int c = 1;
+	    while(input.hasRemaining() && c < 50) {
+		    r1 = parser.parseNext(input);
+		    if(r1 == SMDParser.SMD_VOID || r1 == SMDParser.SMD_BLOCK_INVALID) {
+		    	r2 = fallparser.parseNext(input);
+		    	if(r2 == SMDParser.SMD_VOID || r2 == SMDParser.SMD_BLOCK_INVALID) {
+		    		//end of file?
+		    		break;
+		    	}
+		    }
+		    
+		    c++;
+	    }
+	    
+	    render.produceHtml(parser.markers(), input, sb);
+	    
+	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
+	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
+	    String[] expected = {
+	    		"<ol>","<li>Item 1.",
+	    		"<ul>","<li>Identify and resolve code smells, vulnerabilities, and maintainability issues:",
+	    		"<ul>","<li>Log a bug","a correction of work","</li>",
+	    		"<li>Provide evidence",
+	    		"</li>","</ul>","</li>","</ul>","</li>",
+	    		"<li><b>Unit Test Execution</b></li>",
+	    		"</ol>",
 	    };
 	    		
 	    Object[] actual = sb.toString().lines().collect(Collectors.toList()).toArray();

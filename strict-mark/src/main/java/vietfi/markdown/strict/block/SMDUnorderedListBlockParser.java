@@ -23,7 +23,6 @@ import vietfi.markdown.strict.line.SMDLineParser;
 import vietfi.markdown.strict.line.SMDListItemParser;
 
 public class SMDUnorderedListBlockParser implements SMDParser {
-
 	public SMDUnorderedListBlockParser() {
 		parser = new SMDListItemParser(0);
 	}
@@ -35,7 +34,8 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 	private final SMDListItemParser parser;
 	private char markerType = '\0';
 	private boolean ending = false;//the ending
-	private int itemCount = 0; //li counts
+	private int itemCount = 0;
+	private int spacesOrTabLimit = 3;//space stop counts
 	
 	@Override
 	public int parseNext(CharBuffer buffer) {
@@ -49,11 +49,15 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 			ending = false;
 		}
 		
+		byte list = -1;
 		while(!ending && buffer.hasRemaining()) {
 			int startPos = buffer.position();
-			int l = SMDListItemParser.lookForwardUnorderedList(buffer, markerType);
+			if(list < 0)
+				list = SMDListItemParser.lookForwardUnorderedList(buffer, markerType);
 			
-			if(l > 0) {
+			if(list > 0) {
+				//next sub list
+				spacesOrTabLimit = 3;
 				if(itemCount > 0) { //end the last LI
 					parser.endLine(startPos);
 					parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
@@ -100,8 +104,9 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 					buffer.position(startPos); //reset
 					return SMD_BLOCK_INVALID;
 				}
+				list = -1;
 			}
-			else {
+			else { //list <= 0
 				boolean blankLine = SMDLineParser.detectBlankLine(buffer);
 			
 				if(itemCount == 0) {
@@ -111,36 +116,15 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 					}
 					return SMD_BLOCK_INVALID;
 				}
-				else { //l <= 0 and in the list
-					int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, 3, 1);
+				else { //list <= 0 and in the middle of list
+					final int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, spacesOrTabLimit, 1);
 					
 					if(sp >= 2) { //a tab or more than 2 or 3 spaces, depending on parser
 						if(!blankLine)
 							parser.markers().addStartMarker(STATE_LIST_INDENT, startPos);
 						//next 2 chars or 1 tab
-						char ch = ' ';
+						int pos = startPos + SMDLineParser.consumeSpaceOrTab(buffer, sp, 1);
 						
-						int pos = startPos;
-						
-						while(sp >= 0) {
-							ch = buffer.get();
-							
-							pos++;
-							if(ch == '\t') {//a tab, don't care space any more
-								break;
-							}
-							if((ch == '\n' || ch == '\u001C')) {
-								break;
-							}
-							sp--;
-							assert buffer.hasRemaining():"invalid sp vs spc";
-						}
-						if(ch != ' ' && ch != '\t') {
-							//because the indent2Spaces or indent3Spaces has one optional space
-							//back the optional space if not space.
-							pos--;
-							buffer.position(pos);
-						}
 						if(!blankLine)
 							parser.markers().addStopMarker(STATE_LIST_INDENT, pos);
 						//continue parsing of listParser
@@ -161,16 +145,29 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 							parser.markers().rollbackState(STATE_LIST_INDENT);
 							return SMD_VOID;
 						}
+						//next line is a sub list
+						if(spacesOrTabLimit > sp)
+							spacesOrTabLimit = sp;
 					}
 					else {
 						parser.endLine(buffer.position());
-						if(blankLine)
+						if(blankLine) {
 							SMDLineParser.consumeBlankLine(buffer);
-						//not a list anymore
-						parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
-						parser.markers().addStopMarker(STATE_UNORDERED_LIST, buffer.position());
-						ending = true;
-						return SMD_BLOCK_END;
+						}
+						byte nl = buffer.hasRemaining() ? SMDListItemParser.lookForwardUnorderedList(buffer, markerType) : 0;
+						
+						if(nl == 0) {
+							//not a list anymore
+							parser.markers().addStopMarker(STATE_LIST_ITEM, startPos);
+							parser.markers().addStopMarker(STATE_UNORDERED_LIST, buffer.position());
+							ending = true;
+							spacesOrTabLimit = 3;
+							return SMD_BLOCK_END;
+						}
+						else if(nl < 0) //not detected a next list
+							break;
+						else
+							list = nl;
 					}
 				}
 			}
@@ -187,6 +184,7 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 			parser.markers().addStopMarker(STATE_LIST_ITEM, position);
 			parser.markers().addStopMarker(STATE_ORDERED_LIST, position);
 			ending = true;
+			spacesOrTabLimit = 3;
 		}
 	}
 	

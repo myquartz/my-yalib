@@ -70,6 +70,7 @@ public class SMDListItemParser extends SMDLineParser {
 	private char subListItemType = '\0'; 
 	private int subItemLines = 0; //sub item line counting
 	private int currParser = PARSE_UNKNOWN;
+	private int spacesOrTabLimit = DEFAULT_SPACES_THRESHOLD;
 	protected boolean inSubParagraph = false;
 	
 	public SMDListItemParser()  {
@@ -115,6 +116,8 @@ public class SMDListItemParser extends SMDLineParser {
 	protected static final int PARSE_ORDERED_LIST = 4;
 	protected static final int PARSE_UNORDERED_LIST = 5;
 	
+	protected static final int DEFAULT_SPACES_THRESHOLD = 4;
+	
 	@Override
 	public void endLine(int position) {
 		switch(currParser) {
@@ -144,6 +147,7 @@ public class SMDListItemParser extends SMDLineParser {
 		subItemLines = 0;
 		currParser = PARSE_UNKNOWN;
 		inSubParagraph = false;
+		spacesOrTabLimit = DEFAULT_SPACES_THRESHOLD;
 	}
 	
 	public void reset() {
@@ -152,6 +156,7 @@ public class SMDListItemParser extends SMDLineParser {
 		subItemLines = 0;
 		subListItemType = '\0';
 		inSubParagraph = false;
+		spacesOrTabLimit = DEFAULT_SPACES_THRESHOLD;
 	}
 	
 	/**
@@ -219,7 +224,7 @@ public class SMDListItemParser extends SMDLineParser {
 		//second or later line
 		int r = -1;
 		//counting number of spaces
-		int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, 4, 1);
+		final int sp = SMDLineParser.lookForwardTabOrSpaces(buffer, spacesOrTabLimit, 1);
 		boolean blankLine = SMDLineParser.detectBlankLine(buffer);
 		
 		//continue parsing as the last, the indent spaces has been passed
@@ -256,12 +261,21 @@ public class SMDListItemParser extends SMDLineParser {
 			}
 			break;
 		case PARSE_CODE_LINE:
-			if(sp < 3 || blankLine) {
+			if(sp > 0 || blankLine) {
 				r = codeParser.parseLine(buffer);
-				if(r == SMD_LINE_INVALID || r == SMD_LINE_BLANK_OR_EMPTY)
+				if(r == SMD_LINE_INVALID || r == SMD_LINE_BLANK_OR_EMPTY) {
 					this.currParser = PARSE_UNKNOWN;
-				if(r == SMD_LINE_BLANK_OR_EMPTY) //blank line is marking a new paragraph.
-					inSubParagraph = true;
+					if(r == SMD_LINE_BLANK_OR_EMPTY) //blank line is marking a new paragraph.
+						inSubParagraph = true;
+				}
+				else
+					spacesOrTabLimit = 1;//code prefixes with 1 space.
+			}
+			else {
+				codeParser.endLine(pos);
+				r = SMD_LINE_INVALID;
+				this.currParser = PARSE_UNKNOWN;
+				spacesOrTabLimit = DEFAULT_SPACES_THRESHOLD;
 			}
 			break;
 		case PARSE_QUOTE_LINE:
@@ -275,32 +289,12 @@ public class SMDListItemParser extends SMDLineParser {
 			break;
 		case PARSE_ORDERED_LIST:
 		case PARSE_UNORDERED_LIST:
-			int spc = (currParser == PARSE_UNORDERED_LIST ? 2 : 3);
-			if(sp >= spc) { //a tab or more than 2 or 3 spaces, depending on parser
+			int threshold = (currParser == PARSE_UNORDERED_LIST ? 2 : 3);
+			if(sp >= threshold) { //a tab or more than 2 or 3 spaces, depending on parser
 				markers.addStartMarker(STATE_LIST_INDENT, pos);
-				//next 2 chars or 1 tab
-				char ch = ' ';
+				//consume next 2-3 spaces or 1 tab
+				pos += consumeSpaceOrTab(buffer, Math.min(threshold, sp), 1);
 				
-				
-				while(spc >= 0) {
-					ch = buffer.get();
-					
-					pos++;
-					if(ch == '\t') {//a tab, don't care space any more
-						break;
-					}
-					if((ch == '\n' || ch == '\u001C')) {
-						break;
-					}
-					spc--;
-					assert buffer.hasRemaining():"invalid sp vs spc";
-				}
-				if(ch != ' ' && ch != '\t') {
-					//because the indent2Spaces or indent3Spaces has one optional space
-					//back the optional space if not space.
-					pos--;
-					buffer.position(pos);
-				}
 				markers.addStopMarker(STATE_LIST_INDENT, pos);
 				//continue parsing of listParser
 				r = listParser.parseLine(buffer);
@@ -318,14 +312,16 @@ public class SMDListItemParser extends SMDLineParser {
 					this.subListItemType = '\0';
 					this.currParser = PARSE_UNKNOWN;
 				}
+				if(spacesOrTabLimit > sp)
+					spacesOrTabLimit = sp;
 			}
 			else {
-				byte l = sp == 0 ? 
-								currParser == PARSE_UNORDERED_LIST ?  lookForwardUnorderedList(buffer, this.subListItemType)
-										: lookForwardOrderedList(buffer, this.subListItemType)
-						: 0;
+				byte list = sp == 0 ? currParser == PARSE_UNORDERED_LIST 
+								?  lookForwardUnorderedList(buffer, this.subListItemType)
+								: lookForwardOrderedList(buffer, this.subListItemType)
+								: 0;
 				
-				if(l > 0) {
+				if(list > 0) {
 					if(subItemLines > 0) {
 						listParser.endLine(pos);
 						markers.addStopMarker(STATE_LIST_ITEM, pos);
@@ -366,21 +362,23 @@ public class SMDListItemParser extends SMDLineParser {
 					markers.addStopMarker(STATE_LIST_ITEM, pos);
 					if(blankLine) {
 						//consume the line ending
-						SMDLineParser.consumeBlankLine(buffer);
+						SMDLineParser.consumeBlankLine(buffer);	
 						pos = buffer.position();
 					}
+					
 					if(currParser == PARSE_ORDERED_LIST)
 						markers.addStopMarker(STATE_ORDERED_LIST, pos);
 					else if(currParser == PARSE_UNORDERED_LIST)
 						markers.addStopMarker(STATE_UNORDERED_LIST, pos);
 					this.subListItemType = '\0';
 					this.currParser = PARSE_UNKNOWN;
+					this.spacesOrTabLimit = DEFAULT_SPACES_THRESHOLD;
 					if(blankLine) {
 						r = SMD_LINE_BLANK_OR_EMPTY;
 						inSubParagraph = true;
 					}
 					else
-						r = l < 0 ? SMD_LINE_VOID : SMD_LINE_INVALID;
+						r = list < 0 ? SMD_LINE_VOID : SMD_LINE_INVALID;
 				}
 			}
 			break;
@@ -511,6 +509,9 @@ public class SMDListItemParser extends SMDLineParser {
 						inSubParagraph = false;
 						markers.rollbackLastMarkerContentStart(STATE_PARAGRAPH);
 					}
+				}
+				else if(r == SMD_LINE_PARSED || r == SMD_LINE_PARSED_END) {
+					currParser = PARSE_PARAGRAPH_TEXT;
 				}
 			}
 		}
