@@ -274,6 +274,7 @@ public class SMDListItemParser extends SMDLineParser {
 			else {
 				codeParser.endLine(pos);
 				r = SMD_LINE_INVALID;
+				this.currParser = PARSE_UNKNOWN;
 				spacesOrTabLimit = DEFAULT_SPACES_THRESHOLD;
 			}
 			break;
@@ -291,21 +292,8 @@ public class SMDListItemParser extends SMDLineParser {
 			int threshold = (currParser == PARSE_UNORDERED_LIST ? 2 : 3);
 			if(sp >= threshold) { //a tab or more than 2 or 3 spaces, depending on parser
 				markers.addStartMarker(STATE_LIST_INDENT, pos);
-				//next 2 chars or 1 tab
-				char ch = ' ';
-				int spc = Math.min(threshold, sp);
-				while(spc > 0) {
-					ch = buffer.get();
-					
-					pos++;
-					if(ch == '\t') {//a tab, don't care space any more
-						break;
-					}
-					if((ch == '\n' || ch == '\u001C')) {
-						break;
-					}
-					spc--;
-				}
+				//consume next 2-3 spaces or 1 tab
+				pos += consumeSpaceOrTab(buffer, Math.min(threshold, sp), 1);
 				
 				markers.addStopMarker(STATE_LIST_INDENT, pos);
 				//continue parsing of listParser

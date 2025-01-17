@@ -212,25 +212,27 @@ public abstract class SMDLineParser implements SMDParser {
 	 * @param buffer the input buffer.
 	 * @param space number of spaces to consume (maximum).
 	 * @param tab number of tabs to consume (break condition)
-	 * @return total number of spaces left if there is a number tab then space -= tab * 4.
+	 * @return number of chars consumed
 	 */
 	public static int consumeSpaceOrTab(CharBuffer buffer, int space, int tab) {
 		if(space == 0 && tab == 0)
 			return 0;
+		int count = 0;
 		
 		while(buffer.hasRemaining() && space > 0) {
 			char ch = buffer.get(); //consume until the space
+			count++;
 			if(ch == ' ')
 				space --;
 			else if(ch == '\t') {
 				tab --;
 				space -= 4;
 				if(tab <= 0) {
-					return space;
+					break;
 				}
 			}
 		}
-		return space;
+		return count;
 	}
 	
 	/**

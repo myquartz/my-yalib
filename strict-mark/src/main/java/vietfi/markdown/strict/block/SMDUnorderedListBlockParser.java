@@ -123,28 +123,8 @@ public class SMDUnorderedListBlockParser implements SMDParser {
 						if(!blankLine)
 							parser.markers().addStartMarker(STATE_LIST_INDENT, startPos);
 						//next 2 chars or 1 tab
-						char ch = ' ';
+						int pos = startPos + SMDLineParser.consumeSpaceOrTab(buffer, sp, 1);
 						
-						int pos = startPos;
-						int spc = sp;
-						while(spc > 0 && buffer.hasRemaining()) {
-							ch = buffer.get();
-							
-							pos++;
-							if(ch == '\t') {//a tab, don't care space any more
-								break;
-							}
-							if((ch == '\n' || ch == '\u001C')) {
-								break;
-							}
-							spc--;
-						}
-						if(ch != ' ' && ch != '\t') {
-							//because the indent2Spaces or indent3Spaces has one optional space
-							//back the optional space if not space.
-							pos--;
-							buffer.position(pos);
-						}
 						if(!blankLine)
 							parser.markers().addStopMarker(STATE_LIST_INDENT, pos);
 						//continue parsing of listParser
