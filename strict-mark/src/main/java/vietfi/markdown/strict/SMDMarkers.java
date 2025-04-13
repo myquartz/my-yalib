@@ -16,7 +16,6 @@
 package vietfi.markdown.strict;
 
 import java.util.Arrays;
-import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -35,9 +34,15 @@ public class SMDMarkers {
     protected static final int CONTENT_STOP = 1 << 28; //turn on bit 28
     protected static final int MARKER_STOP = 1 << 27; //turn on bit 27
 
+    protected static final int MAXIMUM_MARKER_LENGTH;
+    
+    static {
+    	String maximumString = System.getProperty("smd.maximum.markers", String.valueOf("102400")); //100k markers
+    	MAXIMUM_MARKER_LENGTH = Integer.parseInt(maximumString);
+    }
     
 	/**
-     * markers of output
+     * extensible markers of output
      * each signed integer (32 bits) divided into 4 bytes, the meaning is
      * 
      * bits indexes (byte alignment):
@@ -59,7 +64,8 @@ public class SMDMarkers {
      * 
      * PPP..: position of buffer. 20 bits addressable, support maximum buffer length is 1 million characters.
      */
-    private final int[] markers;
+    
+    private int[] markers;
     //fulfill index (or length of markers)
     private int fulfillIndex = 0;
     //cursor index
@@ -69,6 +75,19 @@ public class SMDMarkers {
         this.markers = new int[markerLength];
     }
     
+    private void extendMakersLength() {
+    	//by step by step
+    	if(markers.length < 102400) {
+    		//double size
+    		int[] newMarkers = Arrays.copyOf(markers, markers.length * 2);
+    		this.markers = newMarkers;
+    	}
+    	else {
+    		//add more 10240
+    		int[] newMarkers = Arrays.copyOf(markers, markers.length + 10240);
+    		this.markers = newMarkers;
+    	}
+    }
     
     public SMDMarkers(int[] markers, int markerPos) {
         this.markers = markers;
@@ -222,42 +241,58 @@ public class SMDMarkers {
 	
 	public void addStartMarkerContent(int newState, int markerBegin, int contentBegin) {
     	if(contentBegin > markerBegin) {
+    		if(markers.length <= fulfillIndex+2)
+    			extendMakersLength();
 	    	//pack marker with state and position
 	    	markers[fulfillIndex++] = MARKER_START | newState << 20 | markerBegin;
 	        markers[fulfillIndex++] = CONTENT_START | newState << 20 | contentBegin;
     	}
     	else { //same position for both
+    		if(markers.length <= fulfillIndex+1)
+    			extendMakersLength();
 	        markers[fulfillIndex++] = MARKER_START | CONTENT_START | newState <<20 | contentBegin;	
     	}    		
     }
 	
 	public void addStopContentMarker(int currentState, int contentEnd, int markerEnd) {
 		if(contentEnd < markerEnd) {
+			if(markers.length <= fulfillIndex+2)
+    			extendMakersLength();
 	    	markers[fulfillIndex++] = CONTENT_STOP | currentState <<20 | contentEnd;
 	        markers[fulfillIndex++] = MARKER_STOP | currentState <<20 | markerEnd;
     	}
     	else {
+    		if(markers.length <= fulfillIndex+1)
+    			extendMakersLength();
     		//same position for both
 	        markers[fulfillIndex++] = MARKER_STOP | CONTENT_STOP | currentState <<20 | markerEnd;
     	}
 	}
 	
 	public void addStartMarker(int newState, int markerBegin) {
+		if(markers.length <= fulfillIndex+1)
+			extendMakersLength();
     	//only content
     	markers[fulfillIndex++] = MARKER_START | newState <<20 | markerBegin;
     }
 	
 	public void addStopMarker(int currentState, int markerEnd) {
+		if(markers.length <= fulfillIndex+1)
+			extendMakersLength();
     	//only content
 		markers[fulfillIndex++] = MARKER_STOP | currentState <<20 | markerEnd;
     }
 	
 	public void addStartContent(int newState, int contentBegin) {
+		if(markers.length <= fulfillIndex+1)
+			extendMakersLength();
     	//only content
     	markers[fulfillIndex++] = CONTENT_START | newState <<20 | contentBegin;
     }
 	
 	public void addStopContent(int currentState, int contentEnd) {
+		if(markers.length <= fulfillIndex+1)
+			extendMakersLength();
     	//only content
 		markers[fulfillIndex++] = CONTENT_STOP | currentState <<20 | contentEnd;
     }
@@ -546,7 +581,7 @@ public class SMDMarkers {
 
 
 	public int remaining() {
-		return markers.length - fulfillIndex;
+		return MAXIMUM_MARKER_LENGTH - fulfillIndex;
 	}
 
 }

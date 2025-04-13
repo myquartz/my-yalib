@@ -48,6 +48,26 @@ public class SMDCodeLineParserTest {
 	}
 	
 	@Test
+	void test1a() {
+	    String inputText = " Code Block formatting.\n";
+	    System.out.println("----test1-----\n" + inputText + "\n----------");
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDCodeLineParser parser = new SMDCodeLineParser();
+	    StringBuilder sb = new StringBuilder(256);
+	    SMDHtmlRender render = new HtmlRenderImpl(null, null, null, "abc", "def", null, null, null, null);
+	    
+	    int r = parser.parseLine(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    render.produceHtml(parser.markers(), input, sb);
+	    
+	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
+	    String expected = "<pre class=\"def\"><code>Code Block formatting.\n";
+	    		
+	    assertEquals(expected, sb.toString());
+	}
+	
+	@Test
 	void bufferOutTest1() {
 	    String inputText = "\tAnother line of plain text.\n";
 	    System.out.println("----buffer out test1-----\n" + inputText + "\n----------");
@@ -65,6 +85,28 @@ public class SMDCodeLineParserTest {
 	    String result = output.toString();
 	    System.out.append("Result:\n").append(result).append("\n\n");
 	    String expected = "<pre><code>Another line of plain text.\n";
+	    		
+	    assertEquals(expected, result);
+	}
+	
+	@Test
+	void bufferOutTest1a() {
+	    String inputText = "\tAnother line of plain text.\n";
+	    System.out.println("----buffer out test1-----\n" + inputText + "\n----------");
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDCodeLineParser parser = new SMDCodeLineParser();
+	    CharBuffer output = CharBuffer.allocate(1024);
+	    SMDHtmlWriter writer = new HtmlWriterImpl(null, null, null, "abc", "def", null, null, null, null);
+	    
+	    int r = parser.parseLine(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    writer.appendHtml(parser.markers(), input, output);
+	    
+	    output.flip();
+	    String result = output.toString();
+	    System.out.append("Result:\n").append(result).append("\n\n");
+	    String expected = "<pre class=\"def\"><code>Another line of plain text.\n";
 	    		
 	    assertEquals(expected, result);
 	}

@@ -294,7 +294,7 @@ public class SMDListItemParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>item first.\n</li>\n"
 	    		+ "<li>item next.\n</li>\n"
 	    		+ "</ul>\n"
@@ -353,7 +353,7 @@ public class SMDListItemParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>item first.\n</li>\n"
 	    		+ "<li>item next.\n</li>\n"
 	    		+ "<li>item 3rd.\n</li>\n"
@@ -403,7 +403,7 @@ public class SMDListItemParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ol>\n"
+	    		+ "<ol>"
 	    		+ "<li>item first.\n</li>\n"
 	    		+ "<li>item next.\n</li>\n"
 	    		+ "<li>item 3rd.\n</li>\n"
@@ -453,7 +453,7 @@ public class SMDListItemParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ol>\n"
+	    		+ "<ol>"
 	    		+ "<li>item first.\n"
 	    		+ "item next.\n</li>\n"
 	    		+ "<li>item 3rd.\n</li>\n"
@@ -506,7 +506,7 @@ public class SMDListItemParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>item first.\n"
 	    		+ "item next.\n"
 	    		+ "</li>\n"
@@ -562,7 +562,7 @@ public class SMDListItemParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>item first.\n"
 	    		+ "<blockquote><p>quote item next.\n</p></blockquote>\n"
 	    		+ "</li>\n"
@@ -619,7 +619,7 @@ public class SMDListItemParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>item first.\n"
 	    		+ "<pre><code>Code here.\n"
 	    		+ "</code></pre>\n"
@@ -673,7 +673,7 @@ public class SMDListItemParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String expected = "The following list:\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>item first.\n"
 	    		+ "<pre><code> Code here.\n"
 	    		+ "</code></pre>\n"

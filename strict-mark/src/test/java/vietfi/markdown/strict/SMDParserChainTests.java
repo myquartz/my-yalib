@@ -43,12 +43,10 @@ public class SMDParserChainTests {
 	            "</p></blockquote>",
 	            "<pre><code>code text.",
 	            "</code></pre>",
-	            "<ol>",
-	            "<li>item text.",
+	            "<ol><li>item text.",
 	            "</li>",
 	            "</ol>",
-	            "<ul>",
-	            "<li>bullet text.",
+	            "<ul><li>bullet text.",
 	            "</li>",
 	            "</ul>",
 	            "<p>Paragraph <b>bold</b> <s>strike</s> <i>italic</i> <code>code</code> text.",
@@ -93,10 +91,8 @@ public class SMDParserChainTests {
 	            "</p>",
 	            "<blockquote><p>quote text.","</p></blockquote>",
 	            "<pre><code>code text.","</code></pre>",
-	            "<ol>",
-	            "<li>item text.","</li>","</ol>",
-	            "<ul>",
-	            "<li>bullet text.","</li>","</ul>",
+	            "<ol><li>item text.","</li>","</ol>",
+	            "<ul><li>bullet text.","</li>","</ul>",
 	            "<h2>heading 2</h2>", "",
 	            "<p>Paragraph <b>bold</b> <s>strike</s> <i>italic</i> <code>code</code> text.",
 	            "</p>","","",
@@ -135,7 +131,7 @@ public class SMDParserChainTests {
 	    String expected = "<h1>Test heading</h1>\n"
 	    		+ "<hr>\n"
 	    		+ "<p>After 7 weeks, I conclude that:\n"
-	    		+ "</p>\n<ol>\n"
+	    		+ "</p>\n<ol>"
 	    		+ "<li>Writing a parser for the <b>markdown</b> text is not easy.\n"
 	    		+ "</li>\n"
 	    		+ "<li>This is the <a href=\"https://daringfireball.net/projects/markdown/syntax#list\">complex</a> markdown sub list:\n"
@@ -147,9 +143,9 @@ public class SMDParserChainTests {
 	    		+ "</p></li>\n"
 	    		+ "</ol>\n"
 	    		+ "\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>Unordered list here.\n"
-	    		+ "<ol>\n"
+	    		+ "<ol>"
 	    		+ "<li>Here is sub item.\n"
 	    		+ "<pre><code>Body of code.\n"
 	    		+ "</code></pre>\n"
@@ -216,7 +212,7 @@ public class SMDParserChainTests {
 	    String expected = "<h1>Test heading</h1>\n"
 	    		+ "<hr>\n"
 	    		+ "<p>After 7 weeks, I conclude that:\n"
-	    		+ "</p>\n<ol>\n"
+	    		+ "</p>\n<ol>"
 	    		+ "<li>Writing a parser for the <b>markdown</b> text is not easy.\n"
 	    		+ "</li>\n"
 	    		+ "<li>This is the <a href=\"https://daringfireball.net/projects/markdown/syntax#list\">complex</a> markdown sub list:\n"
@@ -228,9 +224,9 @@ public class SMDParserChainTests {
 	    		+ "</p></li>\n"
 	    		+ "</ol>\n"
 	    		+ "\n"
-	    		+ "<ul>\n"
+	    		+ "<ul>"
 	    		+ "<li>Unordered list here.\n"
-	    		+ "<ol>\n"
+	    		+ "<ol>"
 	    		+ "<li>Here is sub item.\n"
 	    		+ "<pre><code>Body of code.\n"
 	    		+ "</code></pre>\n"

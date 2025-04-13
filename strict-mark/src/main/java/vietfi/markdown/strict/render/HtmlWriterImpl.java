@@ -24,6 +24,16 @@ import vietfi.markdown.strict.line.HtmlEscapeUtil;
 
 public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 
+	
+	public HtmlWriterImpl() {
+		super();
+	}
+
+	public HtmlWriterImpl(String pClass, String linkClass, String imgClass, String codeClass, String preCodeClass,
+			String blockquoteClass, String ulClass, String olClass, String liClass) {
+		super(pClass, linkClass, imgClass, codeClass, preCodeClass, blockquoteClass, ulClass, olClass, liClass);
+	}
+
 	/**
 	 * max size of URL or encoded `text` string in the &lt;a&gt; tag.
 	 */
@@ -79,14 +89,24 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 	        			break;
 	        		case SMDParser.STATE_INLINE_CODE:
 	        			outputBuffer.append(TAG_CODE_BEGIN);
+	        			if(codeClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(codeClass).append(ATTR_CLASS_END);
+	        			outputBuffer.append(TAG_BEGIN_GT);
 	        			break;
 	        		case SMDParser.STATE_LINK:
 	        			outputBuffer.append(TAG_A_BEGIN);
+	        			if(linkClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(linkClass).append(ATTR_CLASS_END);
 	        			break;
 	        		case SMDParser.STATE_IMAGE:
 	        			outputBuffer.append(TAG_IMG_BEGIN);
+	        			if(imgClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(imgClass).append(ATTR_CLASS_END);
 	        			break;
 	        		case SMDParser.STATE_CODE_BLOCK:
+	        			outputBuffer.append(PRE_TAG);
+	        			if(preCodeClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(preCodeClass).append(ATTR_CLASS_END);
 	        			if(markers.cursorNextState() == SMDParser.STATE_CODE_LANGUAGE)
 							outputBuffer.append(PRE_WITH_LANGUAGUE);
 						else
@@ -94,10 +114,16 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 	        			break;
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			outputBuffer.append(BLOCKQUOTE_BEGIN);
+	        			if(blockquoteClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(blockquoteClass).append(ATTR_CLASS_END);
+	        			outputBuffer.append(TAG_BEGIN_GT);
 	        			break;
 	        		
 	        		case SMDParser.STATE_PARAGRAPH:
 	    				outputBuffer.append(PARA_BEGIN);
+	    				if(pClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(pClass).append(ATTR_CLASS_END);
+	        			outputBuffer.append(TAG_BEGIN_GT);
 	    				break;
 	    				
 	        		case SMDParser.STATE_NEW_LINE:
@@ -106,12 +132,21 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 	    				
 	        		case SMDParser.STATE_ORDERED_LIST:
 	        			outputBuffer.append(OL_BEGIN);
+	        			if(olClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(olClass).append(ATTR_CLASS_END);
+	        			outputBuffer.append(TAG_BEGIN_GT);
 	        			break;
 	        		case SMDParser.STATE_UNORDERED_LIST:
 	        			outputBuffer.append(UL_BEGIN);
+	        			if(ulClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(ulClass).append(ATTR_CLASS_END);
+	        			outputBuffer.append(TAG_BEGIN_GT);
 	        			break;
 	        		case SMDParser.STATE_LIST_ITEM:
 	        			outputBuffer.append(LI_BEGIN);
+	        			if(liClass != null)
+	        				outputBuffer.append(ATTR_CLASS_BEGIN).append(liClass).append(ATTR_CLASS_END);
+	        			outputBuffer.append(TAG_BEGIN_GT);
 	        			break;
 	        			
 	        		case SMDParser.STATE_HEADING_1:

@@ -29,10 +29,8 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	public static final String XHTML_BLOCKQUOTE_TAG = "blockquote";
 	public static final String XHTML_PARA_TAG = "p";
 	public static final String XHTML_NEW_LINE = "br";
-	public static final String XHTML_PRE_TAG_NAME = "pre";
-	public static final String XHTML_PRE_LANGUAGUE_ATTRIBUTE = "class";
+	public static final String XHTML_PRE_TAG_NAME = "pre";	
 	public static final String XHTML_PRE_LANGUAGUE_PREFIX = "language-";
-	
 	
 	public static final String XHTML_UL_TAG = "ul";
 	public static final String XHTML_OL_TAG = "ol";
@@ -41,7 +39,6 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	public static final String[] XHTML_HEADINGS_TAG = {"h1","h2","h3","h4","h5","h6",};
 	
 	private final static String XHTML_HR = "hr";
-	private final static String XHTML_HR_CLASS_ATTR = "class";
 	private final static String XHTML_UNDERSCORE_HR = "underscore-line";
 	private final static String XHTML_DOUBLE_HR = "double-line";
 	private static final String XHTML_STRIKETHROUGH = "s";
@@ -52,6 +49,36 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	private static final String XHTML_A_TAG = "a";
 	private static final String XHTML_IMG_TAG = "img";
 
+	private final static String XHTML_CLASS_ATTR = "class";
+	
+	protected final String pClass;
+	protected final String linkClass;
+	protected final String imgClass;
+	protected final String codeClass;
+	protected final String preCodeClass;
+	protected final String blockquoteClass;
+	protected final String ulClass;
+	protected final String olClass;
+	protected final String liClass;
+	
+	public XhtmlWriterImpl() {
+		this(null, null, null, null, null, null, null, null, null);
+	}
+
+	public XhtmlWriterImpl(String pClass, String linkClass, String imgClass, String codeClass, String preCodeClass, String blockquoteClass,
+			String ulClass, String olClass, String liClass) {
+		super();
+		this.pClass = pClass;
+		this.linkClass = linkClass;
+		this.imgClass = imgClass;
+		this.codeClass = codeClass;
+		this.preCodeClass = preCodeClass;
+		this.blockquoteClass = blockquoteClass;
+		this.ulClass = ulClass;
+		this.olClass = olClass;
+		this.liClass = liClass;
+	}
+	
 	private char[] myArray = null;
 	StringBuilder sb = new StringBuilder(1024);
 	StringBuilder lastText = new StringBuilder(128);
@@ -114,22 +141,34 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	        			break;
 	        		case SMDParser.STATE_INLINE_CODE:
 	        			xmlWriter.writeStartElement(XHTML_CODE);
+	        			if(codeClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, codeClass);
 	        			break;
 	        		case SMDParser.STATE_LINK:
 	        			xmlWriter.writeStartElement(XHTML_A_TAG);
+	        			if(linkClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, linkClass);
 	        			break;
 	        		case SMDParser.STATE_IMAGE:
 	        			xmlWriter.writeStartElement(XHTML_IMG_TAG);
+	        			if(imgClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, imgClass);
 	        			break;
 	        		case SMDParser.STATE_CODE_BLOCK:
 	        			xmlWriter.writeStartElement(XHTML_PRE_TAG_NAME);
+	        			if(preCodeClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, preCodeClass);
 	        			break;
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			xmlWriter.writeStartElement(XHTML_BLOCKQUOTE_TAG);
+	        			if(blockquoteClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, blockquoteClass);
 	        			break;
 	        		
 	        		case SMDParser.STATE_PARAGRAPH:
 	        			xmlWriter.writeStartElement(XHTML_PARA_TAG);
+	        			if(pClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, pClass);
 	        			break;
 	        			
 	        		case SMDParser.STATE_NEW_LINE:
@@ -137,12 +176,18 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	        			break;
 	        		case SMDParser.STATE_ORDERED_LIST:
 	        			xmlWriter.writeStartElement(XHTML_OL_TAG);
+	        			if(olClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, olClass);
 	        			break;
 	        		case SMDParser.STATE_UNORDERED_LIST:
 	        			xmlWriter.writeStartElement(XHTML_UL_TAG);
+	        			if(ulClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, ulClass);
 	        			break;
 	        		case SMDParser.STATE_LIST_ITEM:
 	        			xmlWriter.writeStartElement(XHTML_LI_TAG);
+	        			if(liClass != null)
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, liClass);
 	        			break;
 	        			
 	        		case SMDParser.STATE_HEADING_1:
@@ -160,9 +205,9 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 	        			xmlWriter.writeEmptyElement(XHTML_HR);
 	        		
 	        			if(state == SMDParser.STATE_HORIZONTAL_D)
-	        				xmlWriter.writeAttribute(XHTML_HR_CLASS_ATTR, XHTML_DOUBLE_HR);
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, XHTML_DOUBLE_HR);
 	        			else if(state == SMDParser.STATE_HORIZONTAL_U)
-	        				xmlWriter.writeAttribute(XHTML_HR_CLASS_ATTR, XHTML_UNDERSCORE_HR);
+	        				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, XHTML_UNDERSCORE_HR);
 	        			break;
         		}
         	}
@@ -238,7 +283,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         			xmlWriter.writeAttribute("src", lastUrl.toString());
         			break;
         		case SMDParser.STATE_CODE_LANGUAGE:
-    				xmlWriter.writeAttribute(XHTML_PRE_LANGUAGUE_ATTRIBUTE, 
+    				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, 
     					XHTML_PRE_LANGUAGUE_PREFIX+sb.toString());
     				sb.setLength(0);
     				break;

@@ -60,7 +60,7 @@ public class SMDOrderedListBlockParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block quote formatting.","</li>",
+	    		"<ol><li>Block quote formatting.","</li>",
 	    		"<li>Another line of plain text.","</li>",
 	    		"<li>Goodbye.","</li>",
 	    		"</ol>"
@@ -93,7 +93,7 @@ public class SMDOrderedListBlockParserTest {
 	    String result = output.toString();
 	    System.out.append("Result:\n").append(result).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block quote formatting.","</li>",
+	    		"<ol><li>Block quote formatting.","</li>",
 	    		"<li>Another line of plain text.","</li>",
 	    		"<li>Goodbye.","</li>",
 	    		"</ol>"
@@ -149,7 +149,7 @@ public class SMDOrderedListBlockParserTest {
 	    String result = sb.toString();
 	    System.out.append("Result:\n").append(result).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block.","</li>",
+	    		"<ol><li>Block.","</li>",
 	    		"<li>Another line of plain text, for demo in the blockquote, but longer than buffer's length.","</li>",
 	    		"<li>"+overSize.toString(),"</li>",
 	    		"<li>The last line of plain text, for demo in the blockquote as well, Goodbye.","</li>","</ol>"
@@ -183,7 +183,7 @@ public class SMDOrderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Listing with <b>bold</b>.","</li>",
+	    		"<ol><li>Listing with <b>bold</b>.","</li>",
 	    		"<li>Here is a <a href=\"http://example.com\">link</a> and an image <img alt=\"alt text\" src=\"http://image.com/img.jpg\"> for example.",
 	    		"This continue.",
 	    		"</li>",
@@ -221,7 +221,7 @@ public class SMDOrderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block quote <i>italic</i> is ok.","</li>","</ol>",
+	    		"<ol><li>Block quote <i>italic</i> is ok.","</li>","</ol>",
 	    		"ii. - Invalid. Goodbye."
 	    };
 	    		
@@ -263,7 +263,7 @@ public class SMDOrderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block quote <i>italic</i> is ok.","</li>",
+	    		"<ol><li>Block quote <i>italic</i> is ok.","</li>",
 	    		"<li>Another blockquote. Goodbye.","</li>","</ol>"
 	    };
 	    		
@@ -306,8 +306,8 @@ public class SMDOrderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block quote <i>italic</i> is ok.",
-	    		"<ol>","<li>Another level.","</li>","<li>Continue.","</li>","</ol>",
+	    		"<ol><li>Block quote <i>italic</i> is ok.",
+	    		"<ol><li>Another level.","</li>","<li>Continue.","</li>","</ol>",
 	    		"</li>","</ol>",
 	    };
 	    		
@@ -347,8 +347,8 @@ public class SMDOrderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Block quote <i>italic</i> is ok.",
-	    		"<ul>","<li>Another level.","</li>","</ul>",
+	    		"<ol><li>Block quote <i>italic</i> is ok.",
+	    		"<ul><li>Another level.","</li>","</ul>",
 	    		"</li>","</ol>",
 	    };
 	    		
@@ -390,9 +390,9 @@ public class SMDOrderedListBlockParserTest {
 	    
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Normal text",
+	    		"<ol><li>Normal text",
 	    		"<blockquote><p>Block quote <i>italic</i> is ok.","</p></blockquote>",
-	    		"<ol>","<li>Another level.","</li>","</ol>",
+	    		"<ol><li>Another level.","</li>","</ol>",
 	    		"<blockquote><p>Block quote end","</p></blockquote>",
 	    		"</li>","</ol>",
 	    };
@@ -439,9 +439,9 @@ public class SMDOrderedListBlockParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Normal text",
+	    		"<ol><li>Normal text",
 	    		"<blockquote><p>Block quote <i>italic</i> is ok.","</p></blockquote>",
-	    		"<ul>","<li>Another level.","</li>","</ul>",
+	    		"<ul><li>Another level.","</li>","</ul>",
 	    		"<p>Paragraph at end","</p></li>",
 	    		"<li>Item text","</li>","</ol>",
 	    };
@@ -486,9 +486,9 @@ public class SMDOrderedListBlockParserTest {
 	    System.out.append("Markers:\n").append(parser.markers().toString()).append("\n");
 	    System.out.append("Result:\n").append(sb.toString()).append("\n\n");
 	    String[] expected = {
-	    		"<ol>","<li>Item 1.",
-	    		"<ul>","<li>Identify and resolve code smells, vulnerabilities, and maintainability issues:",
-	    		"<ul>","<li>Log a bug","a correction of work","</li>",
+	    		"<ol><li>Item 1.",
+	    		"<ul><li>Identify and resolve code smells, vulnerabilities, and maintainability issues:",
+	    		"<ul><li>Log a bug","a correction of work","</li>",
 	    		"<li>Provide evidence",
 	    		"</li>","</ul>","</li>","</ul>","</li>",
 	    		"<li><b>Unit Test Execution</b></li>",

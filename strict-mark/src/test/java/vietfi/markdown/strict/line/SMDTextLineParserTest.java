@@ -445,6 +445,41 @@ public class SMDTextLineParserTest {
 	        c++;
 	    }
 	}
+	
+	@Test
+	void test3a() {
+	    String inputText = "**Nested *italic* in bold** and __underline__.\n" +
+	            "`Inline code with * and __`\n" +
+	            "![image alt](http://example.com/image.png) and [link with *italic*](http://example.com).\n";
+	    System.out.println("----test3-----\n" + inputText + "\n----------");
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    SMDHtmlRender render = new HtmlRenderImpl("a", "b", "c", "d", "e", null, null, null, null);
+	    
+	    StringBuilder sb = new StringBuilder(256);
+	    int c = 1;
+	    while (input.hasRemaining() && c < 4) {
+	        System.out.println("test3 " + c);
+	        parser.parseLine(input);
+	        render.produceHtml(parser.markers(), input, sb);
+	        System.out.append("Result:\n").append(sb.toString()).append("\n\n");
+	        switch (c) {
+	            case 1:
+	                assertEquals("<b>Nested <i>italic</i> in bold</b> and <u>underline</u>.\n", sb.toString());
+	                break;
+	            case 2:
+	            	parser.printDebug();
+	                assertEquals("<code class=\"d\">Inline code with * and __</code>\n", sb.toString());
+	                break;
+	            case 3:
+	            	assertEquals("<img class=\"c\" alt=\"image alt\" src=\"http://example.com/image.png\"> and <a class=\"b\" href=\"http://example.com\">link with *italic*</a>.\n", sb.toString());
+	                break;
+	        }
+	        sb.setLength(0);
+	        parser.markers().resetMarkers();
+	        c++;
+	    }
+	}
 
 	@Test
 	void xhtmlTest3() {

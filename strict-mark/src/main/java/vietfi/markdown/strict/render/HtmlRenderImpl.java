@@ -24,6 +24,10 @@ import vietfi.markdown.strict.line.HtmlEscapeUtil;
 
 public class HtmlRenderImpl implements SMDHtmlRender {
 
+	public static final String ATTR_CLASS_BEGIN = " class=\"";
+	public static final String ATTR_CLASS_END = "\"";
+	public static final String TAG_BEGIN_GT = ">";
+	
 	public static final String TAG_STRIKE_BEGIN = "<s>";
     public static final String TAG_STRIKE_END = "</s>";
 	public static final String TAG_BOLD_BEGIN = "<b>";
@@ -32,7 +36,7 @@ public class HtmlRenderImpl implements SMDHtmlRender {
     public static final String TAG_ITALIC_END = "</i>";
     public static final String TAG_UNDERLINE_BEGIN = "<u>";
     public static final String TAG_UNDERLINE_END = "</u>";
-    public static final String TAG_CODE_BEGIN = "<code>";
+    public static final String TAG_CODE_BEGIN = "<code";
     public static final String TAG_CODE_END = "</code>";
     
     public static final String TAG_A_BEGIN = "<a";
@@ -52,22 +56,23 @@ public class HtmlRenderImpl implements SMDHtmlRender {
     public static final String TAG_IMG_URL_BEGIN = " src=\"";
     public static final String TAG_IMG_URL_END = ESCAPE_QUOTE;
     
-    public static final String PRE_STD = "<pre><code>";
-    public static final String PRE_WITH_LANGUAGUE = "<pre><code class=\"language-";
+    public static final String PRE_TAG = "<pre";
+    public static final String PRE_STD = "><code>";
+    public static final String PRE_WITH_LANGUAGUE = "><code class=\"language-";
     public static final String PRE_WITH_LANGUAGUE_POSTFIX = "\">";
     public static final String PRE_POSTFIX = "</code></pre>\n";
     
-    public static final String BLOCKQUOTE_BEGIN = "<blockquote>";
+    public static final String BLOCKQUOTE_BEGIN = "<blockquote";
     public static final String BLOCKQUOTE_END = "</blockquote>\n";
-    public static final String PARA_BEGIN = "<p>";
+    public static final String PARA_BEGIN = "<p";
     public static final String PARA_END = "</p>";
     
-    public static final String UL_BEGIN = "<ul>\n";
+    public static final String UL_BEGIN = "<ul";
 	public static final String UL_END = "</ul>\n";
-	public static final String OL_BEGIN = "<ol>\n";
+	public static final String OL_BEGIN = "<ol";
 	public static final String OL_END = "</ol>\n";
 	
-	public static final String LI_BEGIN = "<li>";
+	public static final String LI_BEGIN = "<li";
 	public static final String LI_END = "</li>\n";
 	
 	public static final String[] HEADINGS_BEGIN = {"<h1>","<h2>","<h3>","<h4>","<h5>","<h6>",};
@@ -77,6 +82,34 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 	public final static String HR_DOUBLE = "<hr class=\"double-line\">\n";
 	public final static String HR_UNDERSCORE = "<hr class=\"underscore-line\">\n";
     
+	protected final String pClass;
+	protected final String linkClass;
+	protected final String imgClass;
+	protected final String codeClass;
+	protected final String preCodeClass;
+	protected final String blockquoteClass;
+	protected final String ulClass;
+	protected final String olClass;
+	protected final String liClass;
+	
+	public HtmlRenderImpl() {
+		this(null, null, null, null, null, null, null, null, null);
+	}
+
+	public HtmlRenderImpl(String pClass, String linkClass, String imgClass, String codeClass, String preCodeClass, String blockquoteClass,
+			String ulClass, String olClass, String liClass) {
+		super();
+		this.pClass = pClass;
+		this.linkClass = linkClass;
+		this.imgClass = imgClass;
+		this.codeClass = codeClass;
+		this.preCodeClass = preCodeClass;
+		this.blockquoteClass = blockquoteClass;
+		this.ulClass = ulClass;
+		this.olClass = olClass;
+		this.liClass = liClass;
+	}
+
 	@Override
 	public void produceHtml(SMDMarkers markers, CharBuffer buffer, StringBuilder outputBuilder) {
         
@@ -120,14 +153,24 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 	        			break;
 	        		case SMDParser.STATE_INLINE_CODE:
 	        			outputBuilder.append(TAG_CODE_BEGIN);
+	        			if(codeClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(codeClass).append(ATTR_CLASS_END);
+	        			outputBuilder.append(TAG_BEGIN_GT);
 	        			break;
 	        		case SMDParser.STATE_LINK:
 	        			outputBuilder.append(TAG_A_BEGIN);
+	        			if(linkClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(linkClass).append(ATTR_CLASS_END);
 	        			break;
 	        		case SMDParser.STATE_IMAGE:
 	        			outputBuilder.append(TAG_IMG_BEGIN);
+	        			if(imgClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(imgClass).append(ATTR_CLASS_END);
 	        			break;
 	        		case SMDParser.STATE_CODE_BLOCK:
+	        			outputBuilder.append(PRE_TAG);
+	        			if(preCodeClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(preCodeClass).append(ATTR_CLASS_END);
 	        			if(markers.cursorNextState() == SMDParser.STATE_CODE_LANGUAGE)
 							outputBuilder.append(PRE_WITH_LANGUAGUE);
 						else
@@ -135,9 +178,15 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 	        			break;
 	        		case SMDParser.STATE_QUOTE_BLOCK:
 	        			outputBuilder.append(BLOCKQUOTE_BEGIN);
+	        			if(blockquoteClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(blockquoteClass).append(ATTR_CLASS_END);
+	        			outputBuilder.append(TAG_BEGIN_GT);
 	        			break;
 	        		case SMDParser.STATE_PARAGRAPH:
 	    				outputBuilder.append(PARA_BEGIN);
+	    				if(pClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(pClass).append(ATTR_CLASS_END);
+	        			outputBuilder.append(TAG_BEGIN_GT);
 	    				break;
 	    				
 	        		case SMDParser.STATE_NEW_LINE:
@@ -146,12 +195,21 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 	    				
 	        		case SMDParser.STATE_ORDERED_LIST:
 	        			outputBuilder.append(OL_BEGIN);
+	        			if(olClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(olClass).append(ATTR_CLASS_END);
+	        			outputBuilder.append(TAG_BEGIN_GT);
 	        			break;
 	        		case SMDParser.STATE_UNORDERED_LIST:
 	        			outputBuilder.append(UL_BEGIN);
+	        			if(ulClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(ulClass).append(ATTR_CLASS_END);
+	        			outputBuilder.append(TAG_BEGIN_GT);
 	        			break;
 	        		case SMDParser.STATE_LIST_ITEM:
 	        			outputBuilder.append(LI_BEGIN);
+	        			if(liClass != null)
+	        				outputBuilder.append(ATTR_CLASS_BEGIN).append(liClass).append(ATTR_CLASS_END);
+	        			outputBuilder.append(TAG_BEGIN_GT);
 	        			break;
 	        			
 	        		case SMDParser.STATE_HEADING_1:
