@@ -17,7 +17,7 @@ package vietfi.markdown.strict;
 
 import java.nio.CharBuffer;
 
-public interface SMDHtmlRender {
+public interface SMDHtmlRender extends SMDRender {
 
 	/**
 	 * Produce the output from the current buffer to outputBuilder.

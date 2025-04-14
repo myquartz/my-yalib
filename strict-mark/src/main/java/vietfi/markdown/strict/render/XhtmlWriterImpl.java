@@ -51,32 +51,50 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 
 	private final static String XHTML_CLASS_ATTR = "class";
 	
-	protected final String pClass;
-	protected final String linkClass;
-	protected final String imgClass;
-	protected final String codeClass;
-	protected final String preCodeClass;
-	protected final String blockquoteClass;
-	protected final String ulClass;
-	protected final String olClass;
-	protected final String liClass;
-	
-	public XhtmlWriterImpl() {
-		this(null, null, null, null, null, null, null, null, null);
-	}
+	protected String pClass;
+	protected String linkClass;
+	protected String imgClass;
+	protected String codeClass;
+	protected String preCodeClass;
+	protected String blockquoteClass;
+	protected String ulClass;
+	protected String olClass;
+	protected String liClass;
 
-	public XhtmlWriterImpl(String pClass, String linkClass, String imgClass, String codeClass, String preCodeClass, String blockquoteClass,
-			String ulClass, String olClass, String liClass) {
-		super();
-		this.pClass = pClass;
-		this.linkClass = linkClass;
-		this.imgClass = imgClass;
-		this.codeClass = codeClass;
-		this.preCodeClass = preCodeClass;
-		this.blockquoteClass = blockquoteClass;
-		this.ulClass = ulClass;
-		this.olClass = olClass;
-		this.liClass = liClass;
+	@Override
+	public void setClassNameForTag(String className, int classForTag) {
+		if(className.isBlank())
+			className = null;
+		
+		switch(classForTag) {
+		case CLASS_FOR_PARAGRAPH:
+			this.pClass = className;
+			break;
+		case CLASS_FOR_LINK:
+			this.linkClass = className;
+			break;
+		case CLASS_FOR_IMG:
+			this.imgClass = className;
+			break;
+		case CLASS_FOR_INLINE_CODE:
+			this.codeClass = className;
+			break;
+		case CLASS_FOR_PRE_CODE:
+			this.preCodeClass = className;
+			break;
+		case CLASS_FOR_BLOCKQUOTE:
+			this.blockquoteClass = className;
+			break;
+		case CLASS_FOR_UL:
+			this.ulClass = className;
+			break;
+		case CLASS_FOR_OL:
+			this.olClass = className;
+			break;
+		case CLASS_FOR_LI:
+			this.liClass = className;
+			break;
+		};
 	}
 	
 	private char[] myArray = null;

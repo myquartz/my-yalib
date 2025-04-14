@@ -20,7 +20,7 @@ import java.nio.CharBuffer;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-public interface SMDXhtmlWriter {
+public interface SMDXhtmlWriter extends SMDRender {
 	
 	/**
 	 * Produce the output from the current buffer to xmlWriter as XHTML 1.1 Standard.

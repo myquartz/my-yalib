@@ -16,6 +16,8 @@
 package vietfi.markdown.strict.render;
 
 import java.nio.CharBuffer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import vietfi.markdown.strict.SMDHtmlRender;
 import vietfi.markdown.strict.SMDMarkers;
@@ -82,34 +84,59 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 	public final static String HR_DOUBLE = "<hr class=\"double-line\">\n";
 	public final static String HR_UNDERSCORE = "<hr class=\"underscore-line\">\n";
     
-	protected final String pClass;
-	protected final String linkClass;
-	protected final String imgClass;
-	protected final String codeClass;
-	protected final String preCodeClass;
-	protected final String blockquoteClass;
-	protected final String ulClass;
-	protected final String olClass;
-	protected final String liClass;
+	protected BiFunction<Integer, String, String> linkResolver = null;
+
+	protected String pClass;
+	protected String linkClass;
+	protected String imgClass;
+	protected String codeClass;
+	protected String preCodeClass;
+	protected String blockquoteClass;
+	protected String ulClass;
+	protected String olClass;
+	protected String liClass;
+
+	@Override
+	public void setClassNameForTag(String className, int classForTag) {
+		if(className.isBlank())
+			className = null;
+		
+		switch(classForTag) {
+		case CLASS_FOR_PARAGRAPH:
+			this.pClass = className;
+			break;
+		case CLASS_FOR_LINK:
+			this.linkClass = className;
+			break;
+		case CLASS_FOR_IMG:
+			this.imgClass = className;
+			break;
+		case CLASS_FOR_INLINE_CODE:
+			this.codeClass = className;
+			break;
+		case CLASS_FOR_PRE_CODE:
+			this.preCodeClass = className;
+			break;
+		case CLASS_FOR_BLOCKQUOTE:
+			this.blockquoteClass = className;
+			break;
+		case CLASS_FOR_UL:
+			this.ulClass = className;
+			break;
+		case CLASS_FOR_OL:
+			this.olClass = className;
+			break;
+		case CLASS_FOR_LI:
+			this.liClass = className;
+			break;
+		};
+	}
 	
-	public HtmlRenderImpl() {
-		this(null, null, null, null, null, null, null, null, null);
+	@Override
+	public void setLinkURLResolver(Consumer<Integer, String, String> resolver) {
+		this.linkResolver = resolver;
 	}
-
-	public HtmlRenderImpl(String pClass, String linkClass, String imgClass, String codeClass, String preCodeClass, String blockquoteClass,
-			String ulClass, String olClass, String liClass) {
-		super();
-		this.pClass = pClass;
-		this.linkClass = linkClass;
-		this.imgClass = imgClass;
-		this.codeClass = codeClass;
-		this.preCodeClass = preCodeClass;
-		this.blockquoteClass = blockquoteClass;
-		this.ulClass = ulClass;
-		this.olClass = olClass;
-		this.liClass = liClass;
-	}
-
+	
 	@Override
 	public void produceHtml(SMDMarkers markers, CharBuffer buffer, StringBuilder outputBuilder) {
         
