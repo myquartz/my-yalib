@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>vietfi.markdown.samples</groupId>
 	<artifactId>web-markdown-demo</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<name>web-markdown-demo</name>
 	<description>Demo Markdown Render in Web for Spring Boot</description>
 	<url/>
@@ -54,7 +54,7 @@
 		<dependency>
 		  <groupId>vietfi.yalib</groupId>
 		  <artifactId>strict-markdown</artifactId>
-		  <version>0.0.1-SNAPSHOT</version>
+		  <version>0.0.3-SNAPSHOT</version>
 		</dependency>
 		
 		<dependency>

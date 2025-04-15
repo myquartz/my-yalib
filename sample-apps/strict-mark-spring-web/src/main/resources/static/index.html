@@ -33,12 +33,13 @@
 </head>
 <body>
     <div class="container mt-2">
+		<form>
         <div class="row mt-2">
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <h4>Markdown Input</h4>
                 <textarea id="markdown-input" class="form-control font-monospace" rows="16" placeholder="Enter Markdown text here..."></textarea>
 			</div>
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
 				<h4>Html output</h4>
 				<textarea id="html-output" class="form-control font-monospace" readonly rows="16" placeholder="Result will be here"></textarea>
             </div>
@@ -52,39 +53,175 @@
 		</div>
 		<pre id="markdown-debug" class="mt-4 font-monospace">
 		</pre>
+		</form>
     </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	<div class="container my-2">
+		<div class="row">
+			<div class="col-12 col-md-6">
+				<h3>Setup class when rendering</h3>
+				<form onsubmit="return setupClass(this)">
+					<div class="mb-3">
+				      <label for="classSelect" class="form-label">Setup for</label>
+				      <select id="classSelect" class="form-select" name="classSelect">
+				        <option value="1">Paragraph</option>
+						<option value="2">Link (a)</option>
+						<option value="3">Image (img)</option>
+						<option value="4">Inline code</option>
+						<option value="5">Pre code</option>
+						<option value="6">Block quote</option>
+						<option value="7">ul</option>
+						<option value="8">ol</option>
+						<option value="9">li</option>
+				      </select>
+				    </div>
+					<div class="mb-3">
+				      <label for="className" class="form-label">Class name</label>
+				      <input type="text" id="className" class="form-control" name="className"
+					  	placeholder="class name">
+				    </div>
+					<button type="submit" class="btn btn-primary">set class</button>					
+				</form>
+			</div>
+			<div class="col-12 col-md-6">
+				<h3>Setup URL resolver</h3>
+				<form onsubmit="return setupResolver(this)">
+					<div class="mb-3">
+				      <label for="resolverSelect" class="form-label">Setup for</label>
+				      <select id="resolverSelect" class="form-select" name="resolverSelect">
+						<option value="img">Image (img)</option>
+				        <option value="link">Link (a)</option>
+				      </select>
+				    </div>
+					<div class="mb-3">
+				      <label for="prefixURI" class="form-label">Prefix URI</label>
+				      <input type="text" id="prefixURI" class="form-control" name="prefixURI" 
+					  	placeholder="https://your.site/path">
+				    </div>
+					<button type="submit" class="btn btn-primary">set resolver</button>					
+				</form>
+			</div>
+		</div>
+		<div class="row my-2">
+			<div class="col-12">
+				<h4>Update Output</h4>
+                <div id="update-output" class="border p-3" style="height:auto; min-height: 50px; max-height: 240px; overflow-y: scroll;">
+				</div>
+			</div>
+		</div>
+	</div>
+	
+    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
     <script>
+		function setupClass(form) {
+			//using jquery to send JSON update to /change-render-class with application/json content type.
+			try {
+				const classSelect = $(form.classSelect).val();
+				const className = $(form.className).val();
+				const data = {
+	                classForTag: parseInt(classSelect),
+	                value: className
+	            };
+				
+				fetch('/api/change-render-class', {
+					method: 'POST',
+					headers: {
+					    "Content-Type": "application/json",
+					},
+	                body: JSON.stringify(data),
+					}).then(function (resp) {
+						if(resp.ok)
+							return resp.text();
+						throw new Error(resp.status, resp.responseText);	
+					})
+					.then(function(data) {
+						$('#update-output').text('Class updated successfully '+(data));
+						renderText('#markdown-input');
+	               	})
+	                .catch(function(e) {
+	                    // Handle error
+	                    $('#update-output').html('<p class="text-danger">Error in HTTP Fetch</p><pre>'+e.toString()+'</pre>');
+	                });
+			}
+			catch (e) {
+				// Handle error
+                $('#update-output').html('<p class="text-danger">Error</p><pre>'+e.toString()+'</pre>');
+			}
+			return false;
+			
+		}
+		
+		function setupResolver(form) {
+			//using jquery to send JSON update to /change-render-class with application/json content type.
+			try {
+				const resolverSelect = $(form.resolverSelect).val();
+				const prefixURI = $(form.prefixURI).val();
+				const data = {
+	                type: resolverSelect,
+	                value: prefixURI
+	            };
+				fetch('/api/change-url-resolver', {
+					method: 'POST',
+					headers: {
+					    "Content-Type": "application/json",
+					},
+			        body: JSON.stringify(data),
+				}).then(function (resp) {
+					if(resp.ok)
+						return resp.text();
+					throw new Error(resp.status, resp.responseText);	
+				})
+				.then(function(data) {
+					$('#update-output').text('Resolve updated: '+(data));
+					renderText('#markdown-input');
+		       	})
+		        .catch(function(e) {
+		            // Handle error
+		            $('#update-output').html('<p class="text-danger">Error in HTTP Fetch</p><pre>'+e.toString()+'</pre>');
+		        });
+			}
+			catch (e) {
+				// Handle error
+                $('#update-output').html('<p class="text-danger">Error</p><pre>'+e.toString()+'</pre>');
+			}
+			return false;
+			
+		}
+		
+		function renderText(input) {
+            const data = input ? input.target ? $(input.target).val() : $(input).val() : $(this).val();
+			if(data && !window.processing) {
+				window.processing = true;
+				fetch('/api/markdown-render', {
+					method: 'POST',
+					headers: {
+					    "Content-Type": "text/plain",
+					},
+			        body: data,
+				}).then(function (resp) {
+					if(resp.ok)
+						return resp.json();
+					throw new Error(resp.status, resp.responseText);	
+				})
+				.then(function(data) {
+					window.processing = false;
+                    $('#markdown-output').html(data.htmlContent);
+					$('#html-output').val(data.htmlContent);
+					$('#markdown-debug').text(data.debugContent);
+		       	})
+		        .catch(function(e) {
+		            // Handle error
+		            $('#markdown-output').html('<p class="text-danger">Error in HTTP Fetch</p><pre>'+e.toString()+'</pre>');
+					window.processing = false;
+		        });
+			}
+			else if(!window.processing) {
+				$('#markdown-output').text('');
+				$('#html-output').val('');
+			}
+        };
         // JavaScript to handle input and output rendering
         $(document).ready(function() {
-            $('#markdown-input').on('input', function() {
-                const markdownText = $(this).val();
-				if(markdownText && !window.processing) {
-					window.processing = true;
-	                $.ajax({
-	                    type: 'POST',
-	                    url: '/api/markdown-render',
-						headers: {
-							"content-type": "text/plain"
-						},
-	                    data: markdownText,
-	                    success: function(response) {
-							window.processing = false;
-	                        $('#markdown-output').html(response.htmlContent);
-							$('#html-output').val(response.htmlContent);
-							$('#markdown-debug').text(response.debugContent);
-	                    },
-	                    error: function(e) {
-							window.processing = false;
-	                        $('#markdown-output').html('<p class="text-danger">Error rendering markdown: HTTP '+e.status+'</p><pre>'+JSON.stringify(e.responseJSON??e.responseText,null,2)+'</pre>');
-	                    }
-	                });
-				}
-				else if(!window.processing) {
-					$('#markdown-output').text('');
-					$('#html-output').val('');
-				}
-            });
+            $('#markdown-input').on('input', renderText);
         });
     </script>
 </body>

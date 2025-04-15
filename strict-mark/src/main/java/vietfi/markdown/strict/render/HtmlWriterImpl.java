@@ -16,24 +16,29 @@
 package vietfi.markdown.strict.render;
 
 import java.nio.CharBuffer;
+import java.util.function.BiFunction;
 
 import vietfi.markdown.strict.SMDHtmlWriter;
 import vietfi.markdown.strict.SMDMarkers;
 import vietfi.markdown.strict.SMDParser;
 import vietfi.markdown.strict.line.HtmlEscapeUtil;
 
-public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
+public class HtmlWriterImpl extends HtmlBaseTagRender implements SMDHtmlWriter {
 
+
+	protected BiFunction<CharBuffer, CharBuffer, Integer> linkHrefResolver = null;
+	protected BiFunction<CharBuffer, CharBuffer, Integer> imgSrcResolver = null;
 	
-	public HtmlWriterImpl() {
-		super();
+	@Override
+	public void setLinkHrefResolver(BiFunction<CharBuffer, CharBuffer, Integer> resolver) {
+		this.linkHrefResolver = resolver;
 	}
 
-	public HtmlWriterImpl(String pClass, String linkClass, String imgClass, String codeClass, String preCodeClass,
-			String blockquoteClass, String ulClass, String olClass, String liClass) {
-		super(pClass, linkClass, imgClass, codeClass, preCodeClass, blockquoteClass, ulClass, olClass, liClass);
+	@Override
+	public void setImageSrcResolver(BiFunction<CharBuffer, CharBuffer, Integer> resolver) {
+		this.imgSrcResolver = resolver;
 	}
-
+	
 	/**
 	 * max size of URL or encoded `text` string in the &lt;a&gt; tag.
 	 */
@@ -59,6 +64,7 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
         boolean safeQuote = false;
     	boolean isInLinkText = false;
     	boolean isInUrl = false;
+    	boolean isInImgSrc = false;
     	
         while(markers.cursorIsAvailable()) {
         	boolean isMarkerStop = markers.cursorIsMarkerStop();
@@ -71,6 +77,7 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
         	safeQuote = false;
         	isInLinkText = false;
         	isInUrl = false;
+        	isInImgSrc = false;
         	
         	if(markers.cursorIsMarkerStart()) {
         		//start marker
@@ -235,6 +242,8 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
         		safeQuote = (state == SMDParser.STATE_IMAGE || state == SMDParser.STATE_IMAGE_SRC || state == SMDParser.STATE_URL);
         		isInLinkText = (state == SMDParser.STATE_LINK);
         		isInUrl = (state == SMDParser.STATE_URL);
+        		isInImgSrc = (state == SMDParser.STATE_IMAGE_SRC);
+        		
         		switch(state) {
         		case SMDParser.STATE_URL: //state URL content is differ
         			outputBuffer.append(TAG_A_URL_BEGIN);
@@ -293,28 +302,60 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
         			if(contentOutput < contentBegin)
     					contentOutput = contentBegin;
         			
-        			if(isInUrl) {//copy to URL as well
-	        			for (int j = contentOutput; j< contentEnd; j++) {
-	        				if(outputBuffer.remaining() < 1+1)
-	        					return false;
-	        				
-	        				char c = buffer.get(j);
-	        				String escape = HtmlEscapeUtil.escapeHtml(c, true);
-	        					if(escape != null)
-	            					lastUrl.append(escape);
-	            				else
-	            					lastUrl.append(c);
+        			if(isInUrl || isInImgSrc) {
+	        			if(isInUrl) {//copy to URL as well
+		        			for (int j = contentOutput; j< contentEnd; j++) {
+		        				if(outputBuffer.remaining() < 1+1)
+		        					return false;
+		        				
+		        				char c = buffer.get(j);
+		        				String escape = HtmlEscapeUtil.escapeHtml(c, true);
+		        					if(escape != null)
+		            					lastUrl.append(escape);
+		            				else
+		            					lastUrl.append(c);
+		        			}
 	        			}
+	        			
+	        			Integer bypass = null;
+						
+	        			if(isInUrl && linkHrefResolver != null 
+	        					|| isInImgSrc && imgSrcResolver != null) {
+							CharBuffer urlBuff = buffer.asReadOnlyBuffer();
+							urlBuff.limit(contentEnd);
+							urlBuff.position(contentBegin);
+							if(isInUrl)	
+								bypass = linkHrefResolver.apply(urlBuff, outputBuffer);
+							else if(isInImgSrc)
+								bypass = imgSrcResolver.apply(urlBuff, outputBuffer);
+						}
+						
+						if(bypass != null) {
+							if(bypass > 0) { //trip from start
+								contentOutput += bypass;
+							}
+							else { //trip from end
+								contentEnd += bypass;
+							}
+						}
+						if (contentOutput >= 0 && contentOutput < contentEnd) {
+							//copy to output the left part
+							contentOutput = HtmlEscapeUtil.writeWithEscapeHtml(safeQuote, 
+		        					buffer, contentOutput, contentEnd, 1, outputBuffer);
+						}
+        			}
+        			else {
+	        			//copy to output as is escape
+	        			contentOutput = HtmlEscapeUtil.writeWithEscapeHtml(safeQuote, 
+	        					buffer, contentOutput, contentEnd, 1, outputBuffer);
         			}
         			
-        			//copy to output
-        			contentOutput = HtmlEscapeUtil.writeWithEscapeHtml(safeQuote, 
-        					buffer, contentOutput, contentEnd, 1, outputBuffer);
     				if(contentOutput < contentEnd)
     					return false;
     				if(!markers.cursorCanGoNext() && contentEnd == buffer.position()) {//break, don't increase markerIndex
     					return true;
     				}
+    			
         		}
         		
         	}
@@ -332,5 +373,6 @@ public class HtmlWriterImpl extends HtmlRenderImpl implements SMDHtmlWriter {
 		else
 			this.contentOutput = 0;
 	}
+
 
 }

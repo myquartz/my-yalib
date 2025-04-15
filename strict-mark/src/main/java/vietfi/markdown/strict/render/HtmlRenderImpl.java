@@ -17,124 +17,24 @@ package vietfi.markdown.strict.render;
 
 import java.nio.CharBuffer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
 import vietfi.markdown.strict.SMDHtmlRender;
 import vietfi.markdown.strict.SMDMarkers;
 import vietfi.markdown.strict.SMDParser;
 import vietfi.markdown.strict.line.HtmlEscapeUtil;
 
-public class HtmlRenderImpl implements SMDHtmlRender {
-
-	public static final String ATTR_CLASS_BEGIN = " class=\"";
-	public static final String ATTR_CLASS_END = "\"";
-	public static final String TAG_BEGIN_GT = ">";
+public class HtmlRenderImpl extends HtmlBaseTagRender implements SMDHtmlRender {
 	
-	public static final String TAG_STRIKE_BEGIN = "<s>";
-    public static final String TAG_STRIKE_END = "</s>";
-	public static final String TAG_BOLD_BEGIN = "<b>";
-    public static final String TAG_BOLD_END = "</b>";
-    public static final String TAG_ITALIC_BEGIN = "<i>";
-    public static final String TAG_ITALIC_END = "</i>";
-    public static final String TAG_UNDERLINE_BEGIN = "<u>";
-    public static final String TAG_UNDERLINE_END = "</u>";
-    public static final String TAG_CODE_BEGIN = "<code";
-    public static final String TAG_CODE_END = "</code>";
-    
-    public static final String TAG_A_BEGIN = "<a";
-    public static final String TAG_A_URL_BEGIN = " href=\"";
-    public static final String TAG_A_URL_END = "\"";
-    public static final String TAG_A_TEXT_BEGIN = ">";
-    //public static final String TAG_A_TEXT_END = "";
-    public static final String TAG_A_END = "</a>";
-    
-    public static final String TAG_NEW_LINE = "<br>";
-    public static final String ESCAPE_QUOTE = "\"";
-    
-    public static final String TAG_IMG_BEGIN = "<img";
-    public static final String TAG_IMG_END = ">";
-    public static final String TAG_IMG_TEXT_BEGIN = " alt=\"";
-    public static final String TAG_IMG_TEXT_END = ESCAPE_QUOTE;
-    public static final String TAG_IMG_URL_BEGIN = " src=\"";
-    public static final String TAG_IMG_URL_END = ESCAPE_QUOTE;
-    
-    public static final String PRE_TAG = "<pre";
-    public static final String PRE_STD = "><code>";
-    public static final String PRE_WITH_LANGUAGUE = "><code class=\"language-";
-    public static final String PRE_WITH_LANGUAGUE_POSTFIX = "\">";
-    public static final String PRE_POSTFIX = "</code></pre>\n";
-    
-    public static final String BLOCKQUOTE_BEGIN = "<blockquote";
-    public static final String BLOCKQUOTE_END = "</blockquote>\n";
-    public static final String PARA_BEGIN = "<p";
-    public static final String PARA_END = "</p>";
-    
-    public static final String UL_BEGIN = "<ul";
-	public static final String UL_END = "</ul>\n";
-	public static final String OL_BEGIN = "<ol";
-	public static final String OL_END = "</ol>\n";
+	protected BiFunction<CharBuffer, StringBuilder, Integer> linkHrefResolver = null;
+	protected BiFunction<CharBuffer, StringBuilder, Integer> imgSrcResolver = null;
 	
-	public static final String LI_BEGIN = "<li";
-	public static final String LI_END = "</li>\n";
-	
-	public static final String[] HEADINGS_BEGIN = {"<h1>","<h2>","<h3>","<h4>","<h5>","<h6>",};
-	public static final String[] HEADINGS_END = {"</h1>\n","</h2>\n","</h3>\n","</h4>\n","</h5>\n","</h6>\n",};
-	
-	public final static String HR = "<hr>\n";
-	public final static String HR_DOUBLE = "<hr class=\"double-line\">\n";
-	public final static String HR_UNDERSCORE = "<hr class=\"underscore-line\">\n";
-    
-	protected BiFunction<Integer, String, String> linkResolver = null;
-
-	protected String pClass;
-	protected String linkClass;
-	protected String imgClass;
-	protected String codeClass;
-	protected String preCodeClass;
-	protected String blockquoteClass;
-	protected String ulClass;
-	protected String olClass;
-	protected String liClass;
-
 	@Override
-	public void setClassNameForTag(String className, int classForTag) {
-		if(className.isBlank())
-			className = null;
-		
-		switch(classForTag) {
-		case CLASS_FOR_PARAGRAPH:
-			this.pClass = className;
-			break;
-		case CLASS_FOR_LINK:
-			this.linkClass = className;
-			break;
-		case CLASS_FOR_IMG:
-			this.imgClass = className;
-			break;
-		case CLASS_FOR_INLINE_CODE:
-			this.codeClass = className;
-			break;
-		case CLASS_FOR_PRE_CODE:
-			this.preCodeClass = className;
-			break;
-		case CLASS_FOR_BLOCKQUOTE:
-			this.blockquoteClass = className;
-			break;
-		case CLASS_FOR_UL:
-			this.ulClass = className;
-			break;
-		case CLASS_FOR_OL:
-			this.olClass = className;
-			break;
-		case CLASS_FOR_LI:
-			this.liClass = className;
-			break;
-		};
+	public void setLinkHrefResolver(BiFunction<CharBuffer, StringBuilder, Integer> resolver) {
+		this.linkHrefResolver = resolver;
 	}
-	
+
 	@Override
-	public void setLinkURLResolver(Consumer<Integer, String, String> resolver) {
-		this.linkResolver = resolver;
+	public void setImageSrcResolver(BiFunction<CharBuffer, StringBuilder, Integer> resolver) {
+		this.imgSrcResolver = resolver;
 	}
 	
 	@Override
@@ -151,6 +51,7 @@ public class HtmlRenderImpl implements SMDHtmlRender {
         boolean safeQuote = false;
     	boolean isInLinkText = false;
     	boolean isInUrl = false;
+    	boolean isInImgSrc = false;
     	
         while(markers.cursorIsAvailable()) {
         	boolean isMarkerStop = markers.cursorIsMarkerStop();
@@ -162,6 +63,7 @@ public class HtmlRenderImpl implements SMDHtmlRender {
         	safeQuote = false;
         	isInLinkText = false;
         	isInUrl = false;
+        	isInImgSrc = false;
         	
         	if(markers.cursorIsMarkerStart()) {
         		//start marker
@@ -326,6 +228,8 @@ public class HtmlRenderImpl implements SMDHtmlRender {
         		safeQuote = (state == SMDParser.STATE_IMAGE || state == SMDParser.STATE_IMAGE_SRC || state == SMDParser.STATE_URL);
         		isInLinkText = (state == SMDParser.STATE_LINK);
         		isInUrl = (state == SMDParser.STATE_URL);
+        		isInImgSrc = (state == SMDParser.STATE_IMAGE_SRC);
+        		
         		switch(state) {
         		case SMDParser.STATE_URL: //state URL content is differ
         			outputBuilder.append(TAG_A_URL_BEGIN);
@@ -380,20 +284,50 @@ public class HtmlRenderImpl implements SMDHtmlRender {
 					
 				}
 				else {
-					if(isInUrl) {//copy to URL as well
-	        			for (int j = contentBegin; j< contentEnd; j++) {
-	        				char c = buffer.get(j);
-	        				String escape = HtmlEscapeUtil.escapeHtml(c, true);
-	        					if(escape != null)
-	            					lastUrl.append(escape);
-	            				else
-	            					lastUrl.append(c);
-	        			}
+					if(isInUrl || isInImgSrc) {
+						if(isInUrl) {
+							//copy to URL to print later (if needed)
+		        			for (int j = contentBegin; j< contentEnd; j++) {
+		        				char c = buffer.get(j);
+		        				String escape = HtmlEscapeUtil.escapeHtml(c, true);
+		        					if(escape != null)
+		            					lastUrl.append(escape);
+		            				else
+		            					lastUrl.append(c);
+		        			}
+						}
+						Integer bypass = null;
+						
+						if(isInUrl && linkHrefResolver != null 
+								|| isInImgSrc && imgSrcResolver != null) {
+							CharBuffer urlBuff = buffer.asReadOnlyBuffer();
+							urlBuff.limit(contentEnd);
+							urlBuff.position(contentBegin);
+							if(isInUrl)	
+								bypass = linkHrefResolver.apply(urlBuff, outputBuilder);
+							else if(isInImgSrc)
+								bypass = imgSrcResolver.apply(urlBuff, outputBuilder);
+						}
+						
+						if(bypass != null) {
+							if(bypass > 0) { //trip from start
+								contentBegin += bypass;
+							}
+							else { //trip from end
+								contentEnd += bypass;
+							}
+						}
+						if (contentBegin >= 0 && contentBegin < contentEnd) {
+							//copy to output the left part
+							HtmlEscapeUtil.appendWithEscapeHtml(safeQuote, 
+									buffer, contentBegin, contentEnd, outputBuilder);
+						}
 	    			}
-				
-					//copy to output
-					HtmlEscapeUtil.appendWithEscapeHtml(safeQuote, 
-    					buffer, contentBegin, contentEnd, outputBuilder);
+					else {
+						//copy to output with escaped
+						HtmlEscapeUtil.appendWithEscapeHtml(safeQuote, 
+								buffer, contentBegin, contentEnd, outputBuilder);
+					}
 				}
 			}
 			

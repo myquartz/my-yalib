@@ -64,6 +64,7 @@ public class SMDParserChain implements SMDParser {
 	 * @throws IllegalArgumentException
 	 * @throws InvocationTargetException
 	 */
+	@SafeVarargs
 	public static SMDParser createParserOf(Class<SMDParser>... parserClasses) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		SMDMarkers markers = new SMDMarkers(4096);
 		List<SMDParser> list = new ArrayList<>(parserClasses.length);

@@ -16,6 +16,7 @@
 package vietfi.markdown.strict;
 
 import java.nio.CharBuffer;
+import java.util.function.BiFunction;
 
 public interface SMDHtmlRender extends SMDRender {
 
@@ -29,4 +30,27 @@ public interface SMDHtmlRender extends SMDRender {
 	 */
 	public void produceHtml(SMDMarkers markers, CharBuffer buffer, StringBuilder outputBuilder);
 	
+	/**
+	 * Set the link URL resolver.
+	 * 
+	 * The resolver form is: method(inputBuffer, outputBuilder) 
+	 * 		it returns how many char bypass from start of the inputBuffer (positive value) or from the end of the inputBuffer (negative value). 
+	 * 		(or null if not modified, the render will continue as is).
+	 * The resolve append its escaped text to the outputBuilder directly.
+	 * 
+	 * @param resolver function to call when a link is found.
+	 */
+	void setLinkHrefResolver(BiFunction<CharBuffer, StringBuilder, Integer> resolver);
+	
+	/**
+	 * Set the image source URL resolver.
+	 * 
+	 * The resolver form is: method(inputBuffer, outputBuilder) 
+	 * 		it returns how many char bypass from start of the inputBuffer (positive value) or from the end of the inputBuffer (negative value). 
+	 * 		(or null if not modified, the render will continue as is).
+	 * The resolve append its escaped text to the outputBuilder directly.
+	 * 
+	 * @param resolver function to call when a image (img tag) is found.
+	 */
+	void setImageSrcResolver(BiFunction<CharBuffer, StringBuilder, Integer> resolver);
 }

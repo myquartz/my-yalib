@@ -16,6 +16,7 @@
 package vietfi.markdown.strict.render;
 
 import java.nio.CharBuffer;
+import java.util.function.Function;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -97,6 +98,20 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 		};
 	}
 	
+	protected Function<String, String> linkHrefResolver = null;
+	protected Function<String, String> imgSrcResolver = null;
+
+	@Override
+	public void setLinkHrefResolver(Function<String, String> resolver) {
+		this.linkHrefResolver = resolver;
+	}
+
+	@Override
+	public void setImageSrcResolver(Function<String, String> resolver) {
+		this.imgSrcResolver = resolver;
+	}
+
+	
 	private char[] myArray = null;
 	StringBuilder sb = new StringBuilder(1024);
 	StringBuilder lastText = new StringBuilder(128);
@@ -126,6 +141,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 		
         boolean isInLinkText = false;
     	boolean isInUrl = false;
+    	boolean isInImgSrc = false;
     	
         while(markers.cursorIsAvailable()) {
         	boolean isMarkerStop = markers.cursorIsMarkerStop();
@@ -137,6 +153,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         	
         	isInLinkText = false;
         	isInUrl = false;
+        	isInImgSrc = false;
         	
         	if(markers.cursorIsMarkerStart()) {
         		if(sb.length() > 0) {
@@ -270,12 +287,12 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         	if(markers.cursorIsContentStart()) {
         		switch(state) {
         		case SMDParser.STATE_URL: //state URL content is differ
-        		case SMDParser.STATE_IMAGE_SRC:
         			isInUrl = true;
-        			/*if(lastUrl == null)
-        				lastUrl = new StringBuilder();
-        			else*/
-        				lastUrl.setLength(0);
+        			lastUrl.setLength(0);
+        			break;
+        		case SMDParser.STATE_IMAGE_SRC:
+        			isInImgSrc = true;
+        			lastUrl.setLength(0);
         			break;
         		case SMDParser.STATE_IMAGE:
         		case SMDParser.STATE_LINK:
@@ -292,13 +309,29 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
         		case SMDParser.STATE_NONE:
         			break;
         		case SMDParser.STATE_URL: //state URL content is differ
-        			xmlWriter.writeAttribute("href", lastUrl.toString());
+        			if(linkHrefResolver != null) {
+        				String originUrl = lastUrl.toString();
+        				String solvedUrl = linkHrefResolver.apply(originUrl);
+        				if(solvedUrl == null)
+        					solvedUrl = originUrl;
+        				xmlWriter.writeAttribute("href", solvedUrl);
+        			}
+        			else
+        				xmlWriter.writeAttribute("href", lastUrl.toString());
         			break;
         		case SMDParser.STATE_IMAGE:
         			xmlWriter.writeAttribute("alt", lastText.toString());
         			break;
         		case SMDParser.STATE_IMAGE_SRC:
-        			xmlWriter.writeAttribute("src", lastUrl.toString());
+        			if(imgSrcResolver != null) {
+        				String originUrl = lastUrl.toString();
+        				String solvedUrl = imgSrcResolver.apply(originUrl);
+        				if(solvedUrl == null)
+        					solvedUrl = originUrl;
+        				xmlWriter.writeAttribute("src", solvedUrl);
+        			}
+        			else
+        				xmlWriter.writeAttribute("src", lastUrl.toString());
         			break;
         		case SMDParser.STATE_CODE_LANGUAGE:
     				xmlWriter.writeAttribute(XHTML_CLASS_ATTR, 
@@ -321,7 +354,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 					if(isInLinkText) {
 						lastText.append(buffer.array(), contentBegin, contentEnd - contentBegin);
 					}
-					else if(isInUrl) {//copy to URL
+					else if(isInUrl || isInImgSrc) {//copy to URL
 						lastUrl.append(buffer.array(), contentBegin, contentEnd - contentBegin);
 	    			}
 					else {
@@ -334,7 +367,7 @@ public class XhtmlWriterImpl implements SMDXhtmlWriter {
 						for(int j = contentBegin; j < contentEnd; j++)
 							lastText.append(buffer.get(j));
 					}
-					else if(isInUrl) {//copy to URL
+					else if(isInUrl || isInImgSrc) {//copy to URL
 						for(int j = contentBegin; j < contentEnd; j++)
 							lastUrl.append(buffer.get(j));
 	    			}

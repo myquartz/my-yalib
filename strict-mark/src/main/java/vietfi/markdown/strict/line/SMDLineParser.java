@@ -164,8 +164,8 @@ public abstract class SMDLineParser implements SMDParser {
 	public static void consumeUtilCatchSpace(CharBuffer buffer) {
 		char ch = buffer.get(); //consume until the space
 		while(buffer.hasRemaining() 
-				&& !(ch == ' ' || ch == '\t')) {
-			ch = buffer.get(); //consume until the new line.
+				&& !(ch == ' ' || ch == '\t')) { //until tab or space
+			ch = buffer.get(); //consume if not matched
 		}
 		assert ch == ' ' || ch == '\t';
 	}
@@ -178,8 +178,8 @@ public abstract class SMDLineParser implements SMDParser {
 	public static void consumeUtilCatchNewLine(CharBuffer buffer) {
 		char ch = buffer.get(); //consume until the new line/ending
 		while(buffer.hasRemaining() 
-				&& !(ch == '\n' || ch == '\u001C')) {
-			ch = buffer.get(); //consume until the new line.
+				&& !(ch == '\n' || ch == '\u001C')) { //until new line
+			ch = buffer.get(); //consume if not matched
 		}
 		assert ch == '\n' || ch == '\u001C';
 	}

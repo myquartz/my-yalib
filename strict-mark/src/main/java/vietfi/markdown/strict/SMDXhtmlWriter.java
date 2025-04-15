@@ -16,6 +16,7 @@
 package vietfi.markdown.strict;
 
 import java.nio.CharBuffer;
+import java.util.function.Function;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -34,5 +35,27 @@ public interface SMDXhtmlWriter extends SMDRender {
 	 * @throws XMLStreamException when writing error
 	 */
 	public void writeXhtml(SMDMarkers markers, CharBuffer buffer, XMLStreamWriter xmlWriter) throws XMLStreamException;
+	
+	/**
+	 * Set the link URL resolver. Because the XML writer is string type for attribute so the resolver is different.
+	 * 
+	 * The resolver form is: method(inputURL) 
+	 * 		it returns the unescaped text to replace the link URL
+	 * 		(or null if not modified, the render will continue as is).
+	 * 
+	 * @param resolver function to call when a link is found.
+	 */
+	void setLinkHrefResolver(Function<String, String> resolver);
+	
+	/**
+	 * Set the image source URL resolver. Because the XML writer is string type for attribute so the resolver is different.
+	 * 
+	 * The resolver form is: method(inputURL) 
+	 * 		it returns the unescaped text to replace the link URL
+	 * 		(or null if not modified, the render will continue as is). 
+	 * 
+	 * @param resolver function to call when a image (img tag) is found.
+	 */
+	void setImageSrcResolver(Function<String, String> resolver);
 
 }

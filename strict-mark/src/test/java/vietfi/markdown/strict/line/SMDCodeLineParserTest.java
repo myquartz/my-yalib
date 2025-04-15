@@ -55,8 +55,9 @@ public class SMDCodeLineParserTest {
 	    CharBuffer input = CharBuffer.wrap(inputText);
 	    SMDCodeLineParser parser = new SMDCodeLineParser();
 	    StringBuilder sb = new StringBuilder(256);
-	    SMDHtmlRender render = new HtmlRenderImpl(null, null, null, "abc", "def", null, null, null, null);
-	    
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    render.setClassNameForTag("abc", SMDHtmlRender.CLASS_FOR_INLINE_CODE);
+	    render.setClassNameForTag("def", SMDHtmlRender.CLASS_FOR_PRE_CODE);
 	    int r = parser.parseLine(input);
 	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
 	    render.produceHtml(parser.markers(), input, sb);
@@ -97,7 +98,9 @@ public class SMDCodeLineParserTest {
 	    CharBuffer input = CharBuffer.wrap(inputText);
 	    SMDCodeLineParser parser = new SMDCodeLineParser();
 	    CharBuffer output = CharBuffer.allocate(1024);
-	    SMDHtmlWriter writer = new HtmlWriterImpl(null, null, null, "abc", "def", null, null, null, null);
+	    SMDHtmlWriter writer = new HtmlWriterImpl();
+	    writer.setClassNameForTag("abc", SMDHtmlRender.CLASS_FOR_INLINE_CODE);
+	    writer.setClassNameForTag("def", SMDHtmlRender.CLASS_FOR_PRE_CODE);
 	    
 	    int r = parser.parseLine(input);
 	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);

@@ -306,11 +306,11 @@ public class SMDMarkers {
     	//check for MARKER_START or CONTENT_START
     	if(lastState == ofState) {
     		if((value & MARKER_START) == MARKER_START) {//same for both
-    			fulfillIndex = pos;
+    			fulfillIndex = pos; //remove one
     			return;
 	    	}
 	    	else if(pos > 0 && (value & CONTENT_START) == CONTENT_START && (markers[pos-1] & MARKER_START) == MARKER_START) {
-	    		fulfillIndex = pos - 1;
+	    		fulfillIndex = pos - 1; //remove two
     			return;
 	    	}
     	}
@@ -325,11 +325,11 @@ public class SMDMarkers {
     	//check for CONTENT_START
     	if(lastState == ofState) {
     		if((value & MARKER_START) == MARKER_START) {//they are combined, remove only content start
-    			markers[pos] = value ^ CONTENT_START;
+    			markers[pos] = value ^ CONTENT_START; //remove bit
     			return;
 	    	}
-	    	else if(pos > 0 && (value & CONTENT_START) == CONTENT_START && (markers[pos-1] & MARKER_START) == MARKER_START) {
-	    		fulfillIndex = pos - 1;
+	    	else if(pos > 0 && (value & CONTENT_START) == CONTENT_START) {
+	    		fulfillIndex = pos; //remove one
     			return;
 	    	}
     	}
@@ -343,7 +343,7 @@ public class SMDMarkers {
     	int lastState = getMarkerState(pos);
     	//check for CONTENT_STOP
     	if(lastState == ofState) {
-    		if((value & MARKER_STOP) == MARKER_STOP) {//they are combined, invalid
+    		if((value & MARKER_STOP) == MARKER_STOP) {//they are combined, can not remove, it is invalid
     			throw new IllegalStateException();
 	    	}
 	    	else if(pos > 0 && (value & CONTENT_STOP) == CONTENT_STOP) {

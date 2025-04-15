@@ -316,6 +316,85 @@ public class SMDTextLineParserTest {
 	}
 
 	@Test
+	void bufferOutTest1a() {
+		String inputText = "This is some text. **Bold text** and *italic text*.\n" +
+                "__Underlined text__ with `inline code`.\n" +
+                "Here is a [link](http://example.com) and an image ![alt text](http://image.com/img.jpg?demo) for example\n"+
+                "Some markers (bold, italic, underline) do not allow a space right followed the begin marker, eg. ** bold ** * italic* __ underline__ but ` name` is ok.\n"+
+                "Bold is not like this: ** it would not bold** neither after.\n"+
+                "Good bye\n";
+		System.out.println("----test1-----\n"+inputText+"\n----------");
+        CharBuffer input = CharBuffer.wrap(inputText);
+        SMDTextLineParser parser = new SMDTextLineParser();
+        CharBuffer output = CharBuffer.allocate(1024);
+        SMDHtmlWriter writer = new HtmlWriterImpl();
+        
+        writer.setLinkHrefResolver((buffer, sb) -> {
+	    	if(buffer.limit() < 8)
+	    		return null;
+	    	char[] urlBuff = new char[8];
+	    	for(int i = 0; i<urlBuff.length; i++)
+	    		urlBuff[i] = buffer.charAt(i);
+	    	
+	    	if(Arrays.equals("http://".toCharArray(), 0, 7, urlBuff, 0, 7)) {
+	    		//return as https://
+	    		sb.append("https://");
+	    		//trim 7 first chars
+	    		return 7;
+	    	}
+	    	return null;
+	    });
+	    //remove from ?query
+        writer.setImageSrcResolver((buffer, sb) -> {
+	    	//finding question mark ?
+	    	while(buffer.hasRemaining() && buffer.get() != '?') {
+	    		//continue;
+	    	}
+	    	
+	    	if(buffer.hasRemaining())
+	    		return -1 - buffer.remaining();
+	    	return null;
+	    });
+	    
+        int r = 0;
+        int c = 0;
+        while(input.hasRemaining() && r != SMDLineParser.SMD_LINE_BLANK_OR_EMPTY && r != SMDLineParser.SMD_LINE_INVALID) {
+        	//parse input to sb, that is appending the result
+        	c++;
+        	r = parser.parseLine(input);
+        	writer.appendHtml(parser.markers(), input, output);
+        	parser.printDebug();
+        	output.flip();
+        	String result = output.toString();
+        	output.clear();
+        	System.out.append("Result:\n").append(result).println();
+        	//each line asserts 
+        	switch(c) {
+        	case 1:
+        		assertEquals("This is some text. <b>Bold text</b> and <i>italic text</i>.\n", result);
+        		break;
+        	case 2:
+        		assertEquals("<u>Underlined text</u> with <code>inline code</code>.\n", result);
+        		break;
+        	case 3:
+        		assertEquals("Here is a <a href=\"https://example.com\">link</a> and an image <img alt=\"alt text\" src=\"http://image.com/img.jpg\"> for example\n", result);
+        		break;
+        	case 4:
+        		assertEquals("Some markers (bold, italic, underline) do not allow a space right followed the begin marker, eg. ** bold ** * italic* __ underline__ but <code> name</code> is ok.\n", result);
+        		break;
+        	case 5:
+        		assertEquals("Bold is not like this: ** it would not bold** neither after.\n", result);
+        		break;
+        	case 6:
+        		assertEquals("Good bye\n", result);
+        		break;
+        	}
+        	
+        	
+        }
+	}
+	
+	@Test
 	void xhtmlTest1() {
 		String inputText = "This is some text. **Bold text** and *italic text*.\n" +
                 "__Underlined text__ with `inline code`.\n" +
@@ -454,7 +533,11 @@ public class SMDTextLineParserTest {
 	    System.out.println("----test3-----\n" + inputText + "\n----------");
 	    CharBuffer input = CharBuffer.wrap(inputText);
 	    SMDTextLineParser parser = new SMDTextLineParser();
-	    SMDHtmlRender render = new HtmlRenderImpl("a", "b", "c", "d", "e", null, null, null, null);
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    render.setClassNameForTag("a", SMDHtmlRender.CLASS_FOR_PARAGRAPH);
+	    render.setClassNameForTag("b", SMDHtmlRender.CLASS_FOR_LINK);
+	    render.setClassNameForTag("c", SMDHtmlRender.CLASS_FOR_IMG);
+	    render.setClassNameForTag("d", SMDHtmlRender.CLASS_FOR_INLINE_CODE);
 	    
 	    StringBuilder sb = new StringBuilder(256);
 	    int c = 1;
@@ -473,6 +556,68 @@ public class SMDTextLineParserTest {
 	                break;
 	            case 3:
 	            	assertEquals("<img class=\"c\" alt=\"image alt\" src=\"http://example.com/image.png\"> and <a class=\"b\" href=\"http://example.com\">link with *italic*</a>.\n", sb.toString());
+	                break;
+	        }
+	        sb.setLength(0);
+	        parser.markers().resetMarkers();
+	        c++;
+	    }
+	}
+	
+	@Test
+	void test3b() {
+	    String inputText = "**Nested *italic* in bold** and __underline__.\n" +
+	            "![image alt](http://example.com/image.png)\n" +
+	            "![image alt](http://example.com/image.png?utmSource=xxx) and [link with *italic*](http://example.com).\n";
+	    System.out.println("----test3-----\n" + inputText + "\n----------");
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    
+	    render.setLinkHrefResolver((buffer, sb) -> {
+	    	if(buffer.limit() < 8)
+	    		return null;
+	    	char[] urlBuff = new char[8];
+	    	for(int i = 0; i<urlBuff.length; i++)
+	    		urlBuff[i] = buffer.charAt(i);
+	    	
+	    	if(Arrays.equals("http://".toCharArray(), 0, 7, urlBuff, 0, 7)) {
+	    		//return as https://
+	    		sb.append("https://");
+	    		//trim 7 first chars
+	    		return 7;
+	    	}
+	    	return null;
+	    });
+	    //remove from ?query
+	    render.setImageSrcResolver((buffer, sb) -> {
+	    	//finding question mark ?
+	    	while(buffer.hasRemaining() && buffer.get() != '?') {
+	    		//continue;
+	    	}
+	    	
+	    	if(buffer.hasRemaining())
+	    		return -1 - buffer.remaining();
+	    	return null;
+	    });
+	    
+	    StringBuilder sb = new StringBuilder(256);
+	    int c = 1;
+	    while (input.hasRemaining() && c < 4) {
+	        System.out.println("test3 " + c);
+	        parser.parseLine(input);
+	        render.produceHtml(parser.markers(), input, sb);
+	        System.out.append("Result:\n").append(sb.toString()).append("\n\n");
+	        switch (c) {
+	            case 1:
+	                assertEquals("<b>Nested <i>italic</i> in bold</b> and <u>underline</u>.\n", sb.toString());
+	                break;
+	            case 2:
+	            	parser.printDebug();
+	            	assertEquals("<img alt=\"image alt\" src=\"http://example.com/image.png\">\n", sb.toString());
+	                break;
+	            case 3:
+	            	assertEquals("<img alt=\"image alt\" src=\"http://example.com/image.png\"> and <a href=\"https://example.com\">link with *italic*</a>.\n", sb.toString());
 	                break;
 	        }
 	        sb.setLength(0);
@@ -535,6 +680,7 @@ public class SMDTextLineParserTest {
 	    String inputText = "Multiple paragraphs with different markers.\n" +
 	            "\n" +
 	            "*Italic* before **bold** and then __underline__.\r\n" +
+	            "`Code``` can be invalid.\n"+
 	            "`Code` at the end.\n";
 	    System.out.println("----test4-----\n" + inputText + "\n----------");
 	    CharBuffer input = CharBuffer.wrap(inputText);
@@ -564,6 +710,11 @@ public class SMDTextLineParserTest {
 	                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
 	                break;
 	            case 4:
+	            	parser.printDebug();
+	                assertEquals("<code>Code</code><code>` can be invalid.\n</code>", sb.toString());
+	                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+	                break;
+	            case 5:
 	            	parser.printDebug();
 	                assertEquals("<code>Code</code> at the end.\n", sb.toString());
 	                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
@@ -612,7 +763,10 @@ public class SMDTextLineParserTest {
 	
 	@Test
 	void test6() {
-	    String inputText = "Link is able to empty text [](https://example.com/)\n";
+	    String inputText = "Link is able to empty text [](https://example.com/)\n"
+	    		+"or following some chars [](https://example.com/)[]\n"
+	    		+"or not fulfill []()\n"
+	    		+"or series []()[wrong]\n";
 	    CharBuffer input = CharBuffer.wrap(inputText);
 	    SMDTextLineParser parser = new SMDTextLineParser(24);
 	    SMDHtmlRender render = new HtmlRenderImpl();
@@ -630,6 +784,55 @@ public class SMDTextLineParserTest {
                 assertEquals("Link is able to empty text <a href=\"https://example.com/\">https://example.com/</a>\n", sb.toString());
                 assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
                 break;
+            case 2:
+                assertEquals("or following some chars <a href=\"https://example.com/\">https://example.com/</a>[]\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;
+            case 3:
+                assertEquals("or not fulfill []()\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;
+            case 4:
+                assertEquals("or series []()[wrong]\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;
+        	}
+        	c++;
+        	sb.setLength(0);
+        	
+	    }
+	}
+	
+	@Test
+	void test6a() {
+	    String inputText = "Link is able to empty text [](https://example.com/)\n"
+	    		+"[]()\n"
+	    		+"![]() wrong start\n";
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser(24);
+	    SMDHtmlRender render = new HtmlRenderImpl();
+	    
+	    StringBuilder sb = new StringBuilder(256);
+	    int c = 1;
+	    while (input.hasRemaining()) {
+	        System.out.println("test6 " + c);
+	        int b = parser.parseLine(input);
+	        render.produceHtml(parser.markers(), input, sb);
+        	parser.printDebug();
+        	System.out.append("Result (for input length="+inputText.length()+"):\n").append(sb.toString()).append("\n\n");
+        	switch (c) {
+            case 1:
+                assertEquals("Link is able to empty text <a href=\"https://example.com/\">https://example.com/</a>\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;
+            case 2:
+                assertEquals("[]()\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;
+            case 3:
+                assertEquals("![]() wrong start\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;
         	}
         	c++;
         	sb.setLength(0);
@@ -639,7 +842,9 @@ public class SMDTextLineParserTest {
 	
 	@Test
 	void test7() {
-	    String inputText = "!(https://example.com/img.png)\n";
+	    String inputText = "!(https://example.com/img.png)\n"
+	    		+ "!(https://example.com/img.png)[]\n"
+	    		+ "!(https://example.com/img.png)[wrong img]\n";
 	    CharBuffer input = CharBuffer.wrap(inputText);
 	    SMDTextLineParser parser = new SMDTextLineParser(24);
 	    SMDHtmlRender render = new HtmlRenderImpl();
@@ -657,6 +862,14 @@ public class SMDTextLineParserTest {
                 assertEquals("<img src=\"https://example.com/img.png\">\n", sb.toString());
                 assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
                 break;
+            case 2:
+                assertEquals("<img src=\"https://example.com/img.png\">[]\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;
+            case 3:
+                assertEquals("<img src=\"https://example.com/img.png\">[wrong img]\n", sb.toString());
+                assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
+                break;    
         	}
         	c++;
         	sb.setLength(0);
@@ -727,7 +940,7 @@ public class SMDTextLineParserTest {
 	@Test
 	void test11() {
 	    String inputText = "Invalid link is ok as well [](http://invalid\n"+
-	    			"Invalid link is ok [], just as it\n" +
+	    			"Invalid link is ok [], or[] just as it.\n" +
 	    		"Break line after [] is ok []\n";
 	    CharBuffer input = CharBuffer.wrap(inputText);
 	    SMDTextLineParser parser = new SMDTextLineParser(24);
@@ -746,7 +959,7 @@ public class SMDTextLineParserTest {
                 assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
                 break;
             case 2:    
-                assertEquals("Invalid link is ok [], just as it\n", sb.toString());
+                assertEquals("Invalid link is ok [], or[] just as it.\n", sb.toString());
                 assertEquals(SMDLineParser.SMD_LINE_PARSED, b);
                 break;
             case 3:
@@ -972,7 +1185,7 @@ public class SMDTextLineParserTest {
 	
 	@Test
 	void test16() {
-		String inputText = "Hello: `\n";
+		String inputText = "Hello: `\n"; //render to "Hello: <code>\n</code>"
 	    
 	    CharBuffer input = CharBuffer.wrap(inputText);
 	    SMDTextLineParser parser = new SMDTextLineParser();
@@ -982,10 +1195,75 @@ public class SMDTextLineParserTest {
 	    
 	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
 	    
-	    int[] expectedState = { SMDParser.STATE_TEXT, SMDParser.STATE_TEXT};
+	    int[] expectedState = { SMDParser.STATE_TEXT,
+	    		SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE,
+	    		SMDParser.STATE_TEXT };
 	    
 	    assertArrayEquals(expectedState, parser.markers().toStateArray());
 	    
+	}
+
+	@Test
+	void test16a() {
+		String inputText = "Hello: ``\n"; //render to "Hello: <code>`\n</code>"
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_TEXT,
+	    		SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE,
+	    		SMDParser.STATE_TEXT };
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    
+	}
+
+	@Test
+	void test16b() {
+		String inputText = "Hello: ``` single\n"; //render to "Hello: <code>`</code> single"
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    int[] expectedState = { SMDParser.STATE_TEXT,
+	    		SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE, 
+	    		SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE,
+	    		SMDParser.STATE_TEXT };
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
+	    
+	}
+	
+
+	@Test
+	void test16c() {
+		String inputText = "``` markdown\n"; //this may be miss-parsed to pre-code block. So the pre-code block should call this line first.
+	    
+	    CharBuffer input = CharBuffer.wrap(inputText);
+	    SMDTextLineParser parser = new SMDTextLineParser();
+	    
+	    int r = parser.parseNext(input);
+	    assertEquals(SMDLineParser.SMD_LINE_PARSED, r);
+	    
+	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
+	    
+	    
+	    int[] expectedState = {
+	    		SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE, 
+	    		SMDParser.STATE_INLINE_CODE, SMDParser.STATE_INLINE_CODE,
+	    		SMDParser.STATE_TEXT, SMDParser.STATE_TEXT };
+	    
+	    assertArrayEquals(expectedState, parser.markers().toStateArray());
 	}
 	
 	@Test
@@ -1049,22 +1327,6 @@ public class SMDTextLineParserTest {
 	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
 	    
 	    //assertEquals(0, parser.markers().markedLength());
-	    
-	}
-
-	@Test
-	void test19() {
-		String inputText = "``` markdown\n";
-	    
-	    CharBuffer input = CharBuffer.wrap(inputText);
-	    SMDTextLineParser parser = new SMDTextLineParser();
-	    
-	    int r = parser.parseNext(input);
-	    assertEquals(SMDLineParser.SMD_LINE_INVALID, r);
-	    
-	    System.out.append("Result:\n").append(parser.markers().toString()).append("\n");
-	    
-	    assertEquals(0, parser.markers().markedLength());
 	    
 	}
 	
